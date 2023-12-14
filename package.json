@@ -13,8 +13,8 @@
     "viem": "link:viem"
   },
   "scripts": {
-    "format": "echo 'activating h4x...'",
-    "lint:fix": "echo 'activating h4x...'",
+    "format": "echo 'this is a workaround to bypass suave-viem precommit script hooks'",
+    "lint:fix": "echo 'this is a workaround to bypass suave-viem precommit script hooks'",
     "start": "bun run index.ts"
   }
 }

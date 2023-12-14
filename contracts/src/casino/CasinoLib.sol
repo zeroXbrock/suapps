@@ -1,0 +1,64 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+import "suave/libraries/Suave.sol";
+
+library CasinoLib {
+    uint256 constant max_uint =
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    struct SlotMachine {
+        /// 0-100; chance of winning
+        uint8 winChancePercent;
+        uint256 nonce;
+        uint256 minBet;
+        /// higher number => rarer jackpot (jackpotOdds = winChancePercent/jackpotFactor)
+        uint32 jackpotFactor;
+        /// how much a standard win pays out (multiply this by bet/100 for win payout) (// TODO: add several win tiers)
+        /// encoded in percent; i.e. if payout is 2:1, standardPayoutPercent = 200
+        uint32 standardPayoutPercent;
+        /// how much a jackpot win pays out (multiply this by standard payout for jackpot payout)
+        /// encoded in percent; i.e. if jackpot is 10x standard payout, then jackpotPayoutPercent = 1000
+        uint32 jackpotPayoutPercent;
+    }
+
+    function calculateSlotPull(
+        uint256 userBet,
+        SlotMachine memory machine
+    ) external view returns (uint256 payout) {
+        // machine.nonce
+        // the nonce should be incremented by the SlotMachine controller every pull.
+        uint256 randomNum = Suave.randomUint() + machine.nonce;
+        /* example odds: 
+            winChancePercent = 40;
+            jackpotFactor = 100;
+            standard win odds = winChancePercent = 40%
+            jackpot odds    = winChancePercent / machine.jackpotFactor 
+                            = 40 / 100 = 0.4%
+        */
+        // random number must be greater than the cutoff to win
+        // "cutoff size" will be subtracted from the max uint to determine the cutoff
+        // scale winChancePercent to u256
+        uint256 standardCutoffSize = (max_uint / 100) *
+            machine.winChancePercent;
+        // calculate jackpot odds with scaled winChancePercent
+        // this number will be much smaller than the standard cutoff
+        // so when it's subtracted from the max uint, the number will be very large,
+        // (perhaps obviously) making it less likely to be randomly generated
+        uint256 jackpotCutoffSize = standardCutoffSize / machine.jackpotFactor;
+        uint256 standardCutoff = max_uint - standardCutoffSize;
+        uint256 jackpotCutoff = max_uint - jackpotCutoffSize;
+        if (randomNum >= standardCutoff) {
+            if (randomNum >= jackpotCutoff) {
+                // jackpot payout
+                return
+                    (machine.jackpotPayoutPercent *
+                        machine.standardPayoutPercent *
+                        userBet) / 10000; // account for two multiplied percents
+            }
+            // standard payout
+            return (machine.standardPayoutPercent * userBet) / 100; // account for single percent
+        }
+        // better luck next time
+        payout = 0;
+    }
+}

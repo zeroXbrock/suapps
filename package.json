@@ -15,6 +15,6 @@
   "scripts": {
     "format": "echo 'activating h4x...'",
     "lint:fix": "echo 'activating h4x...'",
-    "start": "bun run index.js"
+    "start": "bun run index.ts"
   }
 }

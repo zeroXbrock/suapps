@@ -1,6 +1,17 @@
-import { Address, Hex, PublicClient, Transport, encodeAbiParameters, encodeFunctionData, keccak256, parseAbi } from 'viem'
-import { suaveRigil } from 'viem/chains'
-import { SuaveTxRequestTypes, TransactionRequestSuave } from 'viem/chains/utils'
+import {
+    Address,
+    Hex,
+    Transport,
+    encodeAbiParameters,
+    encodeFunctionData,
+    keccak256,
+    parseAbi
+} from 'viem'
+import {
+    SuaveProvider,
+    SuaveTxRequestTypes,
+    TransactionRequestSuave
+} from 'viem/chains/utils'
 
 export interface ILimitOrder {
     tokenIn: Address
@@ -11,8 +22,6 @@ export interface ILimitOrder {
     senderKey: Hex
 }
 
-type SuaveClient<T extends Transport> = PublicClient<T, typeof suaveRigil>;
-
 export class LimitOrder<T extends Transport> implements ILimitOrder {
     // ILimitOrder fields
     tokenIn: Address
@@ -22,11 +31,11 @@ export class LimitOrder<T extends Transport> implements ILimitOrder {
     expiryTimestamp: bigint
     senderKey: Hex
     // client configs
-    client: SuaveClient<T>
+    client: SuaveProvider<T>
     contractAddress: Address
     kettleAddress: Address
 
-    constructor(params: ILimitOrder, client: SuaveClient<T>, contractAddress: Address, kettleAddress: Address) {
+    constructor(params: ILimitOrder, client: SuaveProvider<T>, contractAddress: Address, kettleAddress: Address) {
         this.tokenIn = params.tokenIn
         this.tokenOut = params.tokenOut
         this.amountInMax = params.amountInMax
@@ -49,7 +58,7 @@ export class LimitOrder<T extends Transport> implements ILimitOrder {
         }
     }
 
-    hashkey(): Hex {
+    orderId(): Hex {
         return keccak256(this.publicBytes())
     }
 

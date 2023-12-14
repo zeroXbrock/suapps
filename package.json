@@ -11,5 +11,10 @@
   "type": "module",
   "dependencies": {
     "viem": "link:viem"
+  },
+  "scripts": {
+    "format": "echo 'activating h4x...'",
+    "lint:fix": "echo 'activating h4x...'",
+    "start": "bun run index.js"
   }
 }

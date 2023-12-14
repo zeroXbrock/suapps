@@ -1,7 +1,13 @@
-import { Address, Hash, Hex, Transport, encodeFunctionData } from 'viem';
+import { Address, Hash, Hex, Transport, decodeEventLog, encodeFunctionData, getContract, hexToBigInt } from 'viem';
 import { SuaveProvider, SuaveWallet, TransactionRequestSuave } from 'viem/chains/utils';
 import SlotsContract from '../contracts/out/Slots.sol/SlotMachines.json';
 import CasinoLibContract from '../contracts/out/CasinoLib.sol/CasinoLib.json';
+
+export interface SlotMachineLog {
+    slotId: bigint
+    pot: bigint
+    minBet: bigint
+}
 
 export class SlotsClient<T extends Transport> {
     wallet: SuaveWallet<T>
@@ -24,7 +30,10 @@ export class SlotsClient<T extends Transport> {
         this.slotLibAddress = params.slotLibAddress
     }
 
-    /** Deploy SlotMachines contract and return address, as well as update the class instance variable. */
+    /** Deploy SlotMachines contract and return mutated self with new `slotMachinesAddress`.
+     *
+     * // TODO: replace self-mutating class with a factory pattern.
+     */
     async deploy(): Promise<this> {
         if (!this.slotLibAddress) {
             console.log("deploying casino lib...")
@@ -55,38 +64,100 @@ export class SlotsClient<T extends Transport> {
         return this
     }
 
-    /** Initialize a new slot machine. */
-    async initSlotMachine(minBet: bigint): Promise<Hash> {
+    async chipsBalance(): Promise<bigint> {
+        if (!this.slotMachinesAddress) throw new Error('slot machine must be deployed first')
+        const balance = await this.provider.call({
+            account: this.wallet.account,
+            to: this.slotMachinesAddress,
+            data: encodeFunctionData({
+                abi: SlotsContract.abi,
+                functionName: 'chipsBalance',
+                args: [this.wallet.account.address]
+            }),
+            gasPrice: 1000000000n,
+            gas: 26000n,
+            type: '0x0',
+        })
+        if (!balance.data) {
+            throw new Error('failed to retrieve chips balance')
+        }
+        return hexToBigInt(balance.data)
+    }
+
+    /** Deposit SUAVE-ETH to buy chips. */
+    async buyChips(amount: bigint): Promise<Hash> {
+        if (!this.slotMachinesAddress) throw new Error('slot machine must be deployed first')
+        const txRequest: TransactionRequestSuave = {
+            to: this.slotMachinesAddress,
+            data: encodeFunctionData({
+                abi: SlotsContract.abi,
+                functionName: 'buyChips',
+            }),
+            type: '0x0',
+            value: amount,
+            gas: 75000n,
+            gasPrice: 1000000000n,
+        }
+        return await this.wallet.sendTransaction(txRequest)
+    }
+
+    /** Cash out chips for SUAVE-ETH. */
+    async cashChips(amount: bigint): Promise<Hash> {
+        if (!this.slotMachinesAddress) throw new Error('slot machine must be deployed first')
+        const txRequest: TransactionRequestSuave = {
+            to: this.slotMachinesAddress,
+            data: encodeFunctionData({
+                abi: SlotsContract.abi,
+                functionName: 'cashChips',
+                args: [amount],
+            }),
+            type: '0x0',
+            gas: 42000n,
+            gasPrice: 1000000000n,
+        }
+        return await this.wallet.sendTransaction(txRequest)
+    }
+
+    /** Initialize a new slot machine, waits for tx receipt. */
+    async initSlotMachine(startingPot: bigint, minBet: bigint, winChancePercent: number): Promise<SlotMachineLog> {
         if (!this.slotMachinesAddress) throw new Error('slot machine must be deployed first')
         const txRequest: TransactionRequestSuave = {
             to: this.slotMachinesAddress,
             data: encodeFunctionData({
                 abi: SlotsContract.abi,
                 functionName: 'initSlotMachine',
-                args: [minBet],
+                args: [minBet, winChancePercent],
             }),
-            kettleAddress: this.kettleAddress,
-            type: '0x43',
+            type: '0x0',
             gas: 175000n,
             gasPrice: 1000000000n,
+            value: startingPot,
         }
-        return await this.wallet.sendTransaction(txRequest)
+        const txHash = await this.wallet.sendTransaction(txRequest)
+        const initSlotsRes = await this.provider.waitForTransactionReceipt({hash: txHash})
+        // decode log from initSlotMachine; expecting only one
+        const initLog = initSlotsRes.logs[0]
+        const decodedEvent = decodeEventLog({
+            abi: SlotsContract.abi,
+            ...initLog,
+        })
+        return decodedEvent.args as SlotMachineLog
     }
 
     /** Pull lever at given slotId. */
-    async pullSlot(slotId: bigint): Promise<Hash> {
+    async pullSlot(slotId: bigint, betAmount: bigint): Promise<Hash> {
         if (!this.slotMachinesAddress) throw new Error('slot machine must be deployed first')
         const txRequest: TransactionRequestSuave = {
             to: this.slotMachinesAddress,
             data: encodeFunctionData({
                 abi: SlotsContract.abi,
                 functionName: 'pullSlot',
-                args: [slotId],
+                args: [slotId, betAmount],
             }),
             kettleAddress: this.kettleAddress,
             type: '0x43',
-            gas: 75000n,
-            gasPrice: 1000000000n,
+            gas: 499000n,
+            gasPrice: 2000000000n,
         }
         return await this.wallet.sendTransaction(txRequest)
     }

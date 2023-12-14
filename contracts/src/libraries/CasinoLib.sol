@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "suave/libraries/Suave.sol";
-
 library CasinoLib {
     uint256 constant max_uint =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+
     struct SlotMachine {
         /// 0-100; chance of winning
         uint8 winChancePercent;
@@ -19,14 +18,17 @@ library CasinoLib {
         /// how much a jackpot win pays out (multiply this by standard payout for jackpot payout)
         /// encoded in percent; i.e. if jackpot is 10x standard payout, then jackpotPayoutPercent = 1000
         uint32 jackpotPayoutPercent;
+        /// running balance of this machine
+        uint256 pot;
     }
 
     function calculateSlotPull(
-        uint256 userBet,
-        SlotMachine memory machine
-    ) external view returns (uint256 payout) {
+        uint256 betAmount,
+        uint256 _randomNum,
+        CasinoLib.SlotMachine memory machine
+    ) external pure returns (uint256 payout) {
         // the nonce should be incremented by the SlotMachine controller every pull.
-        uint256 randomNum = Suave.randomUint() + machine.nonce;
+        uint256 randomNum = _randomNum + machine.nonce;
         /*
             random number must be greater than the cutoff to win
             "cutoff size" will be subtracted from the max uint to determine the cutoff
@@ -43,10 +45,10 @@ library CasinoLib {
                 return
                     (machine.jackpotPayoutPercent *
                         machine.standardPayoutPercent *
-                        userBet) / 10000; // account for two multiplied percents
+                        betAmount) / 10000; // account for two multiplied percents
             }
             // standard payout
-            return (machine.standardPayoutPercent * userBet) / 100; // account for single percent
+            return (machine.standardPayoutPercent * betAmount) / 100; // account for single percent
         }
         // better luck next time
         payout = 0;

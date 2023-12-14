@@ -2,18 +2,49 @@
 pragma solidity ^0.8.19;
 
 import "../libraries/CasinoLib.sol";
+import "suave/libraries/Suave.sol";
 
 contract SlotMachines {
     mapping(uint256 => CasinoLib.SlotMachine) public slotMachines;
     uint256 numMachines;
+    mapping(address => uint256) public chipsBalance;
 
-    fallback() external payable {}
+    event Test(uint256 debugCode);
+    event Test(address debugCode);
+    event BoughtChips(address gamer, uint256 amount);
+    event EcononicCrisis(uint256 slotId, uint256 pot, uint256 requestedPayout);
+    event InitializedSlotMachine(uint256 slotId, uint256 pot, uint256 minBet);
+    event PulledSlot(uint256 slotId, uint256 betAmount, uint256 latestPot);
+    event Winner(uint256 slotId, address winner, uint256 amount);
+    event Jackpot(uint256 slotId, address winner, uint256 amount);
+    event Bust(uint256 slotId, address gamer);
+    event Fail(uint256 errCode);
 
-    receive() external payable {}
+    fallback() external {
+        emit Fail(11);
+    }
+
+    receive() external payable {
+        emit Fail(21);
+    }
+
+    function buyChips() public payable returns (bool success) {
+        require(msg.value > 0, "deposit must be greater than 0");
+        chipsBalance[msg.sender] += msg.value;
+        emit BoughtChips(msg.sender, msg.value);
+        success = true;
+    }
+
+    function cashChips(uint256 amount) public {
+        require(chipsBalance[msg.sender] >= amount, "insufficient balance");
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        require(success, "ETH transfer failed");
+    }
 
     function initSlotMachine(
-        uint256 minBet
-    ) public payable returns (uint256 slotId, uint8 winChancePercent) {
+        uint256 minBet,
+        uint8 winChancePercent
+    ) public payable returns (uint256 slotId) {
         require(winChancePercent <= 50, "unreasonable odds");
         CasinoLib.SlotMachine memory machine = CasinoLib.SlotMachine({
             winChancePercent: winChancePercent,
@@ -23,49 +54,81 @@ contract SlotMachines {
             // but these should be configurable within reasonable params
             jackpotFactor: 10000,
             standardPayoutPercent: 200,
-            jackpotPayoutPercent: 9001
+            jackpotPayoutPercent: 9001,
+            pot: msg.value
         });
         slotMachines[numMachines] = machine;
         slotId = numMachines++;
+        emit InitializedSlotMachine(slotId, msg.value, minBet);
     }
 
     function pullSlot(
-        uint256 slotId
-    ) public payable returns (bytes memory suave_call_data) {
+        uint256 slotId,
+        uint256 betAmount
+    ) public view returns (bytes memory suave_call_data) {
+        require(
+            Suave.isConfidential(),
+            "must call via confidential compute request"
+        );
+        require(
+            chipsBalance[msg.sender] >= betAmount,
+            "insufficient funds deposited"
+        );
         CasinoLib.SlotMachine memory machine = slotMachines[slotId];
-        require(msg.value >= machine.minBet, "must place at least minimum bet");
-        return encodeOnSlotPulled(msg.sender, msg.value, slotId);
+        require(betAmount >= machine.minBet, "must place at least minimum bet");
+        uint256 randomNum = Suave.randomUint();
+        suave_call_data = encodeOnSlotPulled(betAmount, slotId, randomNum);
     }
 
     function encodeOnSlotPulled(
-        address gambler,
-        uint256 bet,
-        uint256 slotId
-    ) private pure returns (bytes memory data) {
-        data = bytes.concat(
-            this.onSlotPulled.selector,
-            abi.encode(gambler, bet, slotId)
-        );
+        uint256 betAmount,
+        uint256 slotId,
+        uint256 randomNum
+    ) private pure returns (bytes memory) {
+        return
+            bytes.concat(
+                this.onSlotPulled.selector,
+                abi.encode(betAmount, slotId, randomNum)
+            );
     }
 
     function onSlotPulled(
-        address gambler,
-        uint256 bet,
-        uint256 slotId
-    ) public returns (uint256 payout) {
+        uint256 betAmount,
+        uint256 slotId,
+        uint256 randomNum
+    ) external {
+        chipsBalance[msg.sender] -= betAmount;
         CasinoLib.SlotMachine memory machine = slotMachines[slotId];
-        payout = CasinoLib.calculateSlotPull(bet, machine);
+        machine.pot += betAmount;
+        machine.nonce++;
+        slotMachines[slotId] = machine;
+        emit PulledSlot(slotId, betAmount, machine.pot);
+        uint256 payout = CasinoLib.calculateSlotPull(
+            betAmount,
+            randomNum,
+            machine
+        );
         if (payout == 0) {
-            // return early; gambler lost
-            return 0;
+            // return early; player lost
+            emit Bust(slotId, msg.sender);
+            return;
         }
-        // send winnings
-        (bool sent, ) = gambler.call{value: payout}("");
-        if (!sent) {
-            // may have exceeded the contract's balance
-            // refund gambler's bet
-            (sent, ) = gambler.call{value: bet}("");
-            require(sent, "critical error; failed to refund user");
+        if (machine.pot < payout) {
+            // slots couldn't pay out the winnings; refund bet
+            emit EcononicCrisis(slotId, machine.pot, payout);
+            chipsBalance[msg.sender] += betAmount;
+            return;
         }
+        if (
+            payout >=
+            ((machine.jackpotPayoutPercent *
+                machine.standardPayoutPercent *
+                betAmount) / 10000)
+        ) {
+            emit Jackpot(slotId, msg.sender, payout);
+        }
+        // disburse winnings
+        chipsBalance[msg.sender] += payout;
+        emit Winner(slotId, msg.sender, payout);
     }
 }

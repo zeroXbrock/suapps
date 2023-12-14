@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.19;
 
-import "./CasinoLib.sol";
+import "../libraries/CasinoLib.sol";
 
 contract SlotMachines {
     mapping(uint256 => CasinoLib.SlotMachine) public slotMachines;

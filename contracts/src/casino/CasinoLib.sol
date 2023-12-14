@@ -25,25 +25,15 @@ library CasinoLib {
         uint256 userBet,
         SlotMachine memory machine
     ) external view returns (uint256 payout) {
-        // machine.nonce
         // the nonce should be incremented by the SlotMachine controller every pull.
         uint256 randomNum = Suave.randomUint() + machine.nonce;
-        /* example odds: 
-            winChancePercent = 40;
-            jackpotFactor = 100;
-            standard win odds = winChancePercent = 40%
-            jackpot odds    = winChancePercent / machine.jackpotFactor 
-                            = 40 / 100 = 0.4%
+        /*
+            random number must be greater than the cutoff to win
+            "cutoff size" will be subtracted from the max uint to determine the cutoff
         */
-        // random number must be greater than the cutoff to win
-        // "cutoff size" will be subtracted from the max uint to determine the cutoff
         // scale winChancePercent to u256
         uint256 standardCutoffSize = (max_uint / 100) *
             machine.winChancePercent;
-        // calculate jackpot odds with scaled winChancePercent
-        // this number will be much smaller than the standard cutoff
-        // so when it's subtracted from the max uint, the number will be very large,
-        // (perhaps obviously) making it less likely to be randomly generated
         uint256 jackpotCutoffSize = standardCutoffSize / machine.jackpotFactor;
         uint256 standardCutoff = max_uint - standardCutoffSize;
         uint256 jackpotCutoff = max_uint - jackpotCutoffSize;

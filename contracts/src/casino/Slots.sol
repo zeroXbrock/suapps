@@ -29,13 +29,32 @@ contract SlotMachines {
         slotId = numMachines++;
     }
 
+    function pullSlot(
+        uint256 slotId
+    ) public payable returns (bytes memory suave_call_data) {
+        CasinoLib.SlotMachine memory machine = slotMachines[slotId];
+        require(msg.value >= machine.minBet, "must place at least minimum bet");
+        return encodeOnSlotPulled(msg.sender, msg.value, slotId);
+    }
+
+    function encodeOnSlotPulled(
+        address gambler,
+        uint256 bet,
+        uint256 slotId
+    ) private pure returns (bytes memory data) {
+        data = bytes.concat(
+            this.onSlotPulled.selector,
+            abi.encode(gambler, bet, slotId)
+        );
+    }
+
     function onSlotPulled(
         address gambler,
-        uint256 userBet,
+        uint256 bet,
         uint256 slotId
     ) public returns (uint256 payout) {
         CasinoLib.SlotMachine memory machine = slotMachines[slotId];
-        payout = CasinoLib.calculateSlotPull(userBet, machine);
+        payout = CasinoLib.calculateSlotPull(bet, machine);
         if (payout == 0) {
             // return early; gambler lost
             return 0;
@@ -45,16 +64,8 @@ contract SlotMachines {
         if (!sent) {
             // may have exceeded the contract's balance
             // refund gambler's bet
-            (sent, ) = gambler.call{value: userBet}("");
+            (sent, ) = gambler.call{value: bet}("");
             require(sent, "critical error; failed to refund user");
         }
-    }
-
-    function pullSlot(
-        uint256 slotId
-    ) public payable returns (bytes memory suave_call_data) {
-        CasinoLib.SlotMachine memory machine = slotMachines[slotId];
-        require(msg.value >= machine.minBet, "must place at least minimum bet");
-        // TODO: encode calldata to onSlotPulled
     }
 }

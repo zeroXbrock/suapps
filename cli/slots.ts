@@ -8,10 +8,8 @@ import fs from 'fs'
 const DEFAULT_ADMIN_KEY: Hex = '0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12'
 const DEFAULT_KETTLE_ADDRESS: Address = '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f'
 
-export const slotsCli = new Command()
-    .name('slots')
-    .description('Slot machine that uses credibly generated entropy from SUAVE.')
-    .command('deploy')
+const withDeployCommand = (command: Command) => command
+    .name('deploy')
     .description('Deploy the slot machine contracts.')
     .option('-p, --private-key', `Private key of wallet used to deploy contracts.`, DEFAULT_ADMIN_KEY)
     .option('-l, --lib-address', 'Pre-deployed CasinoLib address (Default: New instance is deployed)')
@@ -50,3 +48,11 @@ export const slotsCli = new Command()
         const data = JSON.stringify({slotMachinesAddress, slotLibAddress}, null, 2)
         fs.writeFileSync(args.saveFile, data)
     })
+
+let slotsCli = new Command()
+    .name('slots')
+    .description('Slot machine that uses credibly generated entropy from SUAVE.')
+
+slotsCli = withDeployCommand(slotsCli)
+
+export { slotsCli }

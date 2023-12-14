@@ -10,6 +10,7 @@
   },
   "type": "module",
   "dependencies": {
+    "commander": "^11.1.0",
     "viem": "link:viem"
   },
   "scripts": {

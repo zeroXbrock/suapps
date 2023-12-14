@@ -36,7 +36,6 @@ export class SlotsClient<T extends Transport> {
      */
     async deploy(): Promise<this> {
         if (!this.slotLibAddress) {
-            console.log("deploying casino lib...")
             // deploy slot lib
             const deployLibTxHash = await this.wallet.deployContract({
                 abi: CasinoLibContract.abi,
@@ -45,11 +44,9 @@ export class SlotsClient<T extends Transport> {
             const deployLibReceipt = await this.provider.waitForTransactionReceipt({hash: deployLibTxHash})
             if (!deployLibReceipt.contractAddress) throw new Error('no contract address for SlotLib')
             this.slotLibAddress = deployLibReceipt.contractAddress
-            console.log("deployed", this.slotLibAddress)
         } else [
             console.log('using existing slot lib', this.slotLibAddress)
         ]
-        console.log("deploying slot machine...")
         const libHashPlaceholder = '__$6eae81b6ed3e33d3852c93ab8dab0df069$__'
         const deployContractTxHash = await this.wallet.deployContract({
             abi: SlotsContract.abi,
@@ -60,7 +57,6 @@ export class SlotsClient<T extends Transport> {
         const deployContractReceipt = await this.provider.waitForTransactionReceipt({hash: deployContractTxHash})
         if (!deployContractReceipt.contractAddress) throw new Error('no contract address')
         this.slotMachinesAddress = deployContractReceipt.contractAddress
-        console.log("deployed", this.slotMachinesAddress)
         return this
     }
 

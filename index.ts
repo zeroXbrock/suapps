@@ -1,12 +1,9 @@
 
-import { http, Address, Hex, HttpTransport, decodeEventLog } from 'viem'
+import { http, Address, Hex, HttpTransport } from 'viem'
 import { SuaveProvider, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
 // import { testIntents } from './examples/limitOrder'
-import { SlotsClient } from './lib/slots'
-import { ETH, roundEth } from './lib/utils'
-import SlotsContract from './contracts/out/Slots.sol/SlotMachines.json';
-import { testSlotMachine } from './examples/slotMachine';
-
+import { Command } from "commander"
+import { slotsCli } from './cli/slots'
 
 const adminKey = '0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12'
 const userKey: Hex = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
@@ -22,21 +19,33 @@ const deployNew = false
 /** // TODO:
  * add a CLI to interact with contracts:
  * - deploy, show deployed addresses
+ * - save addresses to a file
  * - init slot machines, show available machines & stats
  * - buy chips
  * - play slots
  * - show balance
  * - cash out
  */
-async function main() {
-  // await testIntents(adminWallet, suaveProvider, userKey, KETTLE_ADDRESS)
-  await testSlotMachine({
-    suaveProvider,
-    adminWallet,
-    deployNew,
-  })
-}
+const suappsCli = new Command()
+  .name('suapp')
+  .description('Demo SUAPPs!')
 
-main().then(() => {
-  console.log('done')
-})
+suappsCli
+  .command('slots')
+  .description('Play slots on SUAVE.')
+  .addCommand(slotsCli)
+
+suappsCli.parse(process.argv)
+
+// async function main() {
+//   // await testIntents(adminWallet, suaveProvider, userKey, KETTLE_ADDRESS)
+//   await testSlotMachine({
+//     suaveProvider,
+//     adminWallet,
+//     deployNew,
+//   })
+// }
+// main().then(() => {
+//   console.log('done')
+// })
+

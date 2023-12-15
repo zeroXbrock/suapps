@@ -60,34 +60,6 @@ const deploy = async (args: CommonArgs & {
     fs.writeFileSync(args.saveFile, data)
 }
 
-// const withDeployCommand = (parentCommand: Command) => {
-//     let command = new Command()
-//         // .command('deploy')
-//         .name('deploy')
-//         .description('Deploy the slot machine contracts.')
-//     // deploy-specific options:
-//     command = command
-        
-
-//     return parentCommand.addCommand(command)
-// }
-
-// const withBuyChipsCommand = (parentCommand: Command) => {
-//     let command = new Command()
-//         // .command('buy-chips')
-//         .name('buy-chips')
-//         .alias('buy')
-//         .alias('bc')
-//         .description('Buy chips to play slots with.')
-//     command = command
-//         .option('-a, --amount', 'Amount of SUAVE-ETH to buy chips with (human format).', '0.5')
-//         .action(async (args: CommonArgs & {amount: string}) => {
-//             console.log(args.amount)
-//         })
-//     return parentCommand.addCommand(command)
-// }
-
-
 const deployCli = () => { 
     let command = new Command()
         .name('deploy')

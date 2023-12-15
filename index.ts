@@ -18,13 +18,14 @@ const deployNew = false
 
 /** // TODO:
  * add a CLI to interact with contracts:
- * - deploy, show deployed addresses
- * - save addresses to a file
- * - init slot machines, show available machines & stats
- * - buy chips
- * - play slots
- * - show balance
- * - cash out
+ * - [x] deploy
+ * - [ ] show deployed addresses
+ * - [x] save addresses to a file
+ * - [ ] init slot machines, show available machines & stats
+ * - [ ] buy chips
+ * - [ ] play slots
+ * - [ ] show balance
+ * - [ ] cash out
  */
 const suappsCli = new Command()
   .name('suapp')

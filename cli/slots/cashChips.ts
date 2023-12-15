@@ -25,9 +25,7 @@ async function cashChips(args: CommonArgs, amount?: string) {
 
 export default function cashChipsCli() {
     let command = new Command()
-        .name('cash-chips')
-        .alias('cashout')
-        .alias('quit')
+        .name('cashout')
         .description('Cash out your chips for SUAVE-ETH.')
         .argument('[amount]', 'Amount of SUAVE-ETH to cash out (human format).')
     command = withCommonArgs(command, ['--kettle-address'])

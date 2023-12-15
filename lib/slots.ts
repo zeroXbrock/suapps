@@ -117,6 +117,7 @@ export class SlotsClient<T extends Transport> {
     /** Initialize a new slot machine, waits for tx receipt. */
     async initSlotMachine(startingPot: bigint, minBet: bigint, winChancePercent: number): Promise<SlotMachineLog> {
         if (!this.slotMachinesAddress) throw new Error('slot machine must be deployed first')
+        const balance = await this.provider.getBalance({address: this.wallet.account.address})
         const txRequest: TransactionRequestSuave = {
             to: this.slotMachinesAddress,
             data: encodeFunctionData({

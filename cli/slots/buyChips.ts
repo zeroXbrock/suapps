@@ -13,9 +13,7 @@ async function buyChips(amount: string, args: CommonArgs) {
 
 export default function buyChipsCli() {
     let command = new Command()
-        .name('buy-chips')
-        .alias('buy')
-        .alias('bc')
+        .name('buy')
         .description('Buy chips to play slots with.')
         .argument('[amount]', 'Amount of SUAVE-ETH to buy chips with (human format).', '0.5')
     command = withCommonArgs(command, ['--kettle-address'])

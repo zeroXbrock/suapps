@@ -1,10 +1,11 @@
-import { SuaveProvider, SuaveTxTypes, SuaveWallet, TransactionReceiptSuave } from 'viem/chains/utils'
+import { SuaveProvider, SuaveTxTypes, SuaveWallet, TransactionReceiptSuave, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
 import IntentsContract from '../contracts/out/Intents.sol/Intents.json'
 import { LimitOrder } from '../lib/limitOrder'
 import { SuaveRevert } from '../lib/suave'
-import { Hex, Transport, concatHex, encodeFunctionData, padHex, toHex } from 'viem'
+import { Hex, Transport, concatHex, encodeFunctionData, http, padHex, toHex } from 'viem'
+import { DEFAULT_ADMIN_KEY, DEFAULT_KETTLE_ADDRESS } from '../cli/slots/commonArgs'
 
-export async function testIntents<T extends Transport>(
+async function testIntents<T extends Transport>(
     adminWallet: SuaveWallet<T>
     , suaveProvider: SuaveProvider<T>
     , userKey: Hex
@@ -81,3 +82,15 @@ export async function testIntents<T extends Transport>(
     })
     console.log('intentResult', intentResult)
 }
+
+async function main() {
+  const adminWallet = getSuaveWallet({
+    privateKey: DEFAULT_ADMIN_KEY,
+    transport: http('http://localhost:8545'),
+  })
+  const suaveProvider = getSuaveProvider(http('http://localhost:8545'))
+  const USERKEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
+  await testIntents(adminWallet, suaveProvider, USERKEY, DEFAULT_KETTLE_ADDRESS)
+}
+
+main()

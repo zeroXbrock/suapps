@@ -17,10 +17,10 @@ export type CommonArgs = {
 
 /** Options to be added to a command. */
 export const commonArgs: Option[] = [
-    new Option('-p, --private-key', `Private key of wallet used to deploy contracts.`).default(DEFAULT_ADMIN_KEY),
-    new Option('-r, --rpc-url', 'URL of suave-geth RPC node. (only supports http for now)').default('http://localhost:8545'),
-    new Option('-k, --kettle-address', 'Address of SUAVE Kettle that will process your confidential requests.').default(DEFAULT_KETTLE_ADDRESS),
-    new Option('-d, --deployment-file', 'Path to file where deployment information is saved.').default('./deployments/slots.json'),
+    new Option('-p, --private-key <privateKey>', `Private key of wallet used to deploy contracts.`).default(DEFAULT_ADMIN_KEY),
+    new Option('-r, --rpc-url <rpcUrl>', 'URL of suave-geth RPC node. (only supports http for now)').default('http://localhost:8545'),
+    new Option('-k, --kettle-address  <kettleAddress>', 'Address of SUAVE Kettle that will process your confidential requests.').default(DEFAULT_KETTLE_ADDRESS),
+    new Option('-d, --deployment-file  <deploymentFile>', 'Path to file where deployment information is saved.').default('./deployments/slots.json'),
 ]
 
 /** Attach common args to the provided command in the returned value.
@@ -41,6 +41,7 @@ export function getHookedUp(args: CommonArgs & any): {
     provider: SuaveProvider<HttpTransport>,
     slotsClient: SlotsClient<HttpTransport>,
 } {
+    console.log('args.privatekey', args.privateKey)
     if (
         !args.privateKey || !isHex(args.privateKey) || args.privateKey.length !== 66
         || !args.rpcUrl

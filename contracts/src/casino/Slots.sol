@@ -37,6 +37,7 @@ contract SlotMachines {
 
     function cashChips(uint256 amount) public {
         require(chipsBalance[msg.sender] >= amount, "insufficient balance");
+        chipsBalance[msg.sender] -= amount;
         (bool success, ) = payable(msg.sender).call{value: amount}("");
         require(success, "ETH transfer failed");
     }

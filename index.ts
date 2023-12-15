@@ -13,7 +13,7 @@ import cashChipsCli from './cli/slots/cashChips'
  * - [ ] init slot machines, show available machines & stats
  * - [x] buy chips
  * - [ ] play slots
- * - [ ] cash out
+ * - [x] cash out
  */
 const suappsCli = new Command()
   .name('suapp')

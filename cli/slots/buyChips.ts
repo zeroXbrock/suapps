@@ -1,4 +1,4 @@
-import { parseEther } from 'viem'
+import { formatEther, parseEther } from 'viem'
 import { CommonArgs, getHookedUp, withCommonArgs } from './commonArgs'
 import { Command } from 'commander'
 
@@ -7,6 +7,8 @@ async function buyChips(amount: string, args: CommonArgs) {
     const amountRaw = parseEther(amount)
     const txHash = await slotsClient.buyChips(amountRaw)
     console.log("bought chips", txHash)
+    const balance = await slotsClient.chipsBalance()
+    console.log(`new balance: ${formatEther(balance)} chips`)
 }
 
 export default function buyChipsCli() {

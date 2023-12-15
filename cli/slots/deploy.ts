@@ -28,7 +28,7 @@ export default function deployCli() {
     let command = new Command()
         .name('deploy')
         .description('Deploy the slot machine contracts.')
-        .option('--lib', 'Pre-deployed CasinoLib address (Default: New instance is deployed)')
+        .option('--lib <libAddress>', 'Pre-deployed CasinoLib address (Default: New instance is deployed)')
         .option('-f, --force', 'Deploy new contracts & overwrite save file if it exists.', false)
     command = withCommonArgs(command)
     return command

@@ -1,6 +1,7 @@
 import { Command } from "commander"
 import buyChipsCli from './cli/slots/buyChips'
 import deployCli from './cli/slots/deploy'
+import cashChipsCli from './cli/slots/cashChips'
 
 /** // TODO:
  * add a CLI to interact with contracts:
@@ -23,5 +24,6 @@ suappsCli
   .description('Play slots on SUAVE.')
   .addCommand(deployCli())
   .addCommand(buyChipsCli())
+  .addCommand(cashChipsCli())
 
 suappsCli.parse(process.argv)

@@ -68,11 +68,10 @@ export async function testSlotMachine<T extends Transport>(params: {
     console.log("spent", roundEth(spent))
 }
 
-
 async function main() {
     const adminWallet = getSuaveWallet({
-      privateKey: DEFAULT_ADMIN_KEY,
-      transport: http('http://localhost:8545'),
+        privateKey: DEFAULT_ADMIN_KEY,
+        transport: http('http://localhost:8545'),
     })
     const suaveProvider = getSuaveProvider(http('http://localhost:8545'))
     await testSlotMachine({
@@ -80,7 +79,6 @@ async function main() {
         adminWallet,
         kettleAddress: DEFAULT_KETTLE_ADDRESS,
     })
-  }
+}
   
-  main()
-  
+main()

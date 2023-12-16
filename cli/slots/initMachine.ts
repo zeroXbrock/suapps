@@ -17,15 +17,25 @@ async function initMachine(
     })
 
     const {slotsClient} = getHookedUp(args)
+    if (!slotsClient.slotMachinesAddress) throw new Error('slot machine must be deployed first')
     const initMachineResult = await slotsClient.initSlotMachine(
         parseEther(startingPot),
         parseEther(minBet),
         winChangePercent
     )
     console.log('init machine result', initMachineResult)
-
-    // const data = JSON.stringify({slotMachinesAddress, slotLibAddress}, null, 2)
-    // fs.writeFileSync(args.deploymentFile, data)
+    // TODO: update file with new slotId
+    const filedata = JSON.parse(fs.readFileSync(args.deploymentFile, 'utf8'))
+    const data = {
+        ...filedata,
+        initializedSlots: [
+            ...(filedata.initializedSlots || []),
+            initMachineResult.slotId
+        ]
+    }
+    fs.writeFileSync(args.deploymentFile, JSON.stringify(data, (_, v) => {
+        if (typeof v === 'bigint') {return v.toString()} else {return v}
+    }, 2))
 }
 
 export default function initMachineCli() {

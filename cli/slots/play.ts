@@ -1,6 +1,5 @@
 import { Command } from 'commander'
 import { CommonArgs, getHookedUp, withCommonArgs } from './commonArgs'
-import fs from 'fs'
 import { parseEther } from 'viem'
 import { checkSlotPullReceipt } from '../../lib/slots';
 

@@ -1,8 +1,7 @@
-import { http, Address, decodeEventLog, Transport } from 'viem'
+import { http, Address, Transport } from 'viem'
 import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
 import { SlotsClient, checkSlotPullReceipt } from '../lib/slots'
 import { ETH, roundEth } from '../lib/utils'
-import SlotsContract from '../contracts/out/Slots.sol/SlotMachines.json';
 import { DEFAULT_ADMIN_KEY, DEFAULT_KETTLE_ADDRESS } from '../cli/slots/commonArgs';
 
 export async function testSlotMachine<T extends Transport>(params: {
@@ -43,12 +42,9 @@ export async function testSlotMachine<T extends Transport>(params: {
         const txHash = await slotsClient.pullSlot(slotId, 10000000000000000n)
         const txReceipt = await suaveProvider.waitForTransactionReceipt({hash: txHash})
         console.log("played slot machine", txReceipt.status)
-        // TODO: move this into `pullSlot`
         for (const res of checkSlotPullReceipt(txReceipt)) {
             console.log(res)
         }
-        // const plainTx = await suaveProvider.getTransaction({hash: txHash})
-        // console.log("plain tx", plainTx)
         } catch (e) {
             const err = (e as Error).message;
             const hexString = err.match(/execution reverted: (0x[0-9a-fA-F]+)/)?.[1];

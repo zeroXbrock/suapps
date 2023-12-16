@@ -1,6 +1,6 @@
 import { http, Address, decodeEventLog, Transport } from 'viem'
 import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
-import { SlotsClient } from '../lib/slots'
+import { SlotsClient, checkSlotPullReceipt } from '../lib/slots'
 import { ETH, roundEth } from '../lib/utils'
 import SlotsContract from '../contracts/out/Slots.sol/SlotMachines.json';
 import { DEFAULT_ADMIN_KEY, DEFAULT_KETTLE_ADDRESS } from '../cli/slots/commonArgs';
@@ -44,19 +44,16 @@ export async function testSlotMachine<T extends Transport>(params: {
         const txReceipt = await suaveProvider.waitForTransactionReceipt({hash: txHash})
         console.log("played slot machine", txReceipt.status)
         // TODO: move this into `pullSlot`
-        for (const log of txReceipt.logs) {
-            console.log(decodeEventLog({
-            abi: SlotsContract.abi,
-            ...log,
-            }))
+        for (const res of checkSlotPullReceipt(txReceipt)) {
+            console.log(res)
         }
         // const plainTx = await suaveProvider.getTransaction({hash: txHash})
         // console.log("plain tx", plainTx)
         } catch (e) {
-        const err = (e as Error).message;
-        const hexString = err.match(/execution reverted: (0x[0-9a-fA-F]+)/)?.[1];
-        const errMsg = Buffer.from(hexString!.slice(2), 'hex').toString('utf8')
-        console.error(errMsg);
+            const err = (e as Error).message;
+            const hexString = err.match(/execution reverted: (0x[0-9a-fA-F]+)/)?.[1];
+            const errMsg = Buffer.from(hexString!.slice(2), 'hex').toString('utf8')
+            console.error(errMsg);
         }
 
         console.log("chips balance", roundEth(await slotsClient.chipsBalance()))

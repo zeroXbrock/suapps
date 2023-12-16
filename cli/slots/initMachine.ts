@@ -24,7 +24,6 @@ async function initMachine(
         winChangePercent
     )
     console.log('init machine result', initMachineResult)
-    // TODO: update file with new slotId
     const filedata = JSON.parse(fs.readFileSync(args.deploymentFile, 'utf8'))
     const data = {
         ...filedata,
@@ -45,9 +44,6 @@ export default function initMachineCli() {
         .argument('[startingPot]', 'Starting pot for the slot machine. (human format)', '1')
         .argument('[minBet]', 'Minimum bet for the slot machine. (human format)', '0.001')
         .argument('[winChancePercent]', 'Win chance percent for the slot machine. (%)', '49')
-        // .option('--starting-pot <startingPot>', 'Starting pot for the slot machine.', '1000000000000000000')
-        // .option('--min-bet <minBet>', 'Minimum bet for the slot machine.', '100000000000000000')
-        // .option('--win-chance-percent <winChancePercent>', 'Win chance percent for the slot machine.', '50')
     command = withCommonArgs(command, ['--kettle-address'])
     return command
         .action(initMachine)

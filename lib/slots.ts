@@ -1,5 +1,5 @@
 import { Address, Hash, Hex, Transport, decodeEventLog, encodeFunctionData, getContract, hexToBigInt } from 'viem';
-import { SuaveProvider, SuaveWallet, TransactionRequestSuave } from 'viem/chains/utils';
+import { SuaveProvider, SuaveWallet, TransactionReceiptSuave, TransactionRequestSuave } from 'viem/chains/utils';
 import SlotsContract from '../contracts/out/Slots.sol/SlotMachines.json';
 import CasinoLibContract from '../contracts/out/CasinoLib.sol/CasinoLib.json';
 
@@ -15,6 +15,7 @@ export class SlotsClient<T extends Transport> {
     slotMachinesAddress?: Address
     slotLibAddress?: Address
     kettleAddress: Address
+    slotIds: bigint[] = []
 
     constructor(params: {
         wallet: SuaveWallet<T>,
@@ -22,12 +23,14 @@ export class SlotsClient<T extends Transport> {
         slotMachinesAddress?: Address,
         kettleAddress?: Address,
         slotLibAddress?: Address,
+        slotIds?: bigint[],
     }) {
         this.wallet = params.wallet
         this.provider = params.provider
         this.slotMachinesAddress = params.slotMachinesAddress
         this.kettleAddress = params.kettleAddress || "0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f"
         this.slotLibAddress = params.slotLibAddress
+        this.slotIds = params.slotIds || []
     }
 
     /** Deploy SlotMachines contract and return mutated self with new `slotMachinesAddress`.
@@ -160,3 +163,9 @@ export class SlotsClient<T extends Transport> {
     }
 }
 
+export function checkSlotPullReceipt(txReceipt: TransactionReceiptSuave) {
+    return txReceipt.logs.map(log => decodeEventLog({
+        abi: SlotsContract.abi,
+        ...log,
+        }))
+}

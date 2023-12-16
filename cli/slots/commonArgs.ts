@@ -63,6 +63,7 @@ export function getHookedUp(args: CommonArgs & any): {
         kettleAddress: args.kettleAddress,
         slotLibAddress: args.libAddress as Hex | undefined,
         slotMachinesAddress: fileConfig?.slotMachinesAddress as Hex | undefined,
+        slotIds: fileConfig?.initializedSlots as bigint[] | undefined,
     })
     return {
         wallet,

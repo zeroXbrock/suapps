@@ -23,7 +23,6 @@ async function initMachine(
         parseEther(minBet),
         winChangePercent
     )
-    console.log('init machine result', initMachineResult)
     const filedata = JSON.parse(fs.readFileSync(args.deploymentFile, 'utf8'))
     const data = {
         ...filedata,

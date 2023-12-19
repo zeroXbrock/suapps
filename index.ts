@@ -11,11 +11,12 @@ import balanceCli from './cli/slots/balances'
  * - [x] deploy
  * - [ ] vanity cli frame:
  *   - [ ] show deployed addresses
- *   - [ ] show chips balance
+ *   - [x] show chips balance
  * - [x] save addresses to a file
- * - [ ] init slot machines, show available machines & stats
+ * - [x] init slot machines
+ * - [ ] show available machines & stats
  * - [x] buy chips
- * - [ ] play slots
+ * - [x] play slots
  * - [x] cash out
  */
 const suappsCli = new Command()

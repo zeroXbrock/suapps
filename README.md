@@ -1,4 +1,4 @@
-# suave-intents
+# suapps
 
 To install dependencies:
 

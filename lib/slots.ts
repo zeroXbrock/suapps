@@ -63,7 +63,7 @@ export class SlotsClient<T extends Transport> {
         return this
     }
 
-    async chipsBalance(): Promise<bigint> {
+    async chipsBalance(account?: Address): Promise<bigint> {
         if (!this.slotMachinesAddress) throw new Error('slot machine must be deployed first')
         const balance = await this.provider.call({
             account: this.wallet.account,
@@ -71,7 +71,7 @@ export class SlotsClient<T extends Transport> {
             data: encodeFunctionData({
                 abi: SlotsContract.abi,
                 functionName: 'chipsBalance',
-                args: [this.wallet.account.address]
+                args: [account || this.wallet.account.address]
             }),
             gasPrice: 1000000000n,
             gas: 26000n,

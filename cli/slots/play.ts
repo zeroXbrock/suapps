@@ -19,7 +19,7 @@ export default function playCli() {
     let command = new Command()
         .name('play')
         .description('Play a slot machine.')
-        .argument('<slotId>', 'Slot machine to play. (example: 0')
+        .argument('<slotId>', 'Slot machine to play. (example: 0)')
         .argument('<bet>', 'Amount of chips to bet. (human format; example: 0.01)')
     command = withCommonArgs(command)
     return command

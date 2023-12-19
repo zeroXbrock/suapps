@@ -41,7 +41,6 @@ export function getHookedUp(args: CommonArgs & any): {
     provider: SuaveProvider<HttpTransport>,
     slotsClient: SlotsClient<HttpTransport>,
 } {
-    console.log('args.privatekey', args.privateKey)
     if (
         !args.privateKey || !isHex(args.privateKey) || args.privateKey.length !== 66
         || !args.rpcUrl

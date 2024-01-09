@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import "suave/libraries/Suave.sol";
 import "suave/standard_peekers/bids.sol";
 import "./SuaveWallet.sol";
+import {UniV2Swop} from "./libraries/SwopLib.sol";
 
 /// Limit order for a swap. Used as a simple example for intents delivery system.
 struct LimitOrder {
@@ -104,13 +105,15 @@ contract Intents {
         );
         bytes memory public_data = abi.encode(public_order);
 
-        uint256 random = Suave.randomUint();
+        // uint256 random = Suave.randomUint();
+        uint256 price = UniV2Swop.getAmountOut(1 ether, 100 ether, 42000 ether);
 
         // returns calldata to trigger `onReceivedIntent()`
         suave_call_data = encodeOnReceivedIntent(
             public_order,
             keccak256(public_data),
-            random
+            price
+            // random
         );
     }
 }

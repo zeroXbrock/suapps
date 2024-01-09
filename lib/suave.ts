@@ -1,4 +1,4 @@
-import { Hex, decodeErrorResult, getFunctionSelector } from 'viem'
+import { Hex, bytesToString, decodeErrorResult, getFunctionSelector, hexToBytes } from 'viem'
 import SuaveContract from '../contracts/out/Suave.sol/Suave.json'
 
 function decodeRawError<E extends Error>(error: E): {abiItem: any, args: any, name: string, details: string} {
@@ -36,7 +36,7 @@ export class SuaveRevert<E extends Error> extends Error {
 
     constructor(rawError: E) {
         const decodedError = decodeRawError(rawError)
-        super(`args: [${decodedError.args}]`)
+        super(bytesToString(hexToBytes(decodedError.args[1])))
         this.name = decodedError.name
         this.abiItem = decodedError.abiItem
         this.cause = rawError.message

@@ -1,11 +1,9 @@
 import { Command, Option } from 'commander'
 import { SlotsClient } from '../../lib/slots'
 import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
-import { Address, Hex, HttpTransport, http, isHex } from 'viem'
+import { Hex, HttpTransport, http, isHex } from 'viem'
 import fs from 'fs'
-
-export const DEFAULT_ADMIN_KEY: Hex = '0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12'
-export const DEFAULT_KETTLE_ADDRESS: Address = '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f'
+import { DEFAULT_ADMIN_KEY, DEFAULT_KETTLE_ADDRESS } from '../helpers'
 
 /** CLI args shared by most commands. */
 export type CommonArgs = {

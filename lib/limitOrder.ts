@@ -10,8 +10,11 @@ import {
 import {
     SuaveProvider,
     SuaveTxRequestTypes,
+    SuaveWallet,
     TransactionRequestSuave
 } from 'viem/chains/utils'
+import IntentsContract from '../contracts/out/Intents.sol/Intents.json'
+import UniV2SwopLibContract from '../contracts/out/SwopLib.sol/UniV2Swop.json'
 
 export interface ILimitOrder {
     tokenIn: Address
@@ -21,6 +24,57 @@ export interface ILimitOrder {
     expiryTimestamp: bigint
     senderKey: Hex
 }
+
+export async function deployLimitOrderManager<T extends Transport>(wallet: SuaveWallet<T>, provider: SuaveProvider<T>): Promise<Address> {
+    // TODO: pre-calculate contract addresses so we don't have to wait for receipts
+    // deploy UniV2Swop lib
+    const deployUniV2SwopHash = await wallet.deployContract({
+        abi: UniV2SwopLibContract.abi,
+        bytecode: UniV2SwopLibContract.bytecode.object as Hex,
+    })
+    const deployUniV2SwopReceipt = await provider.waitForTransactionReceipt({ hash: deployUniV2SwopHash })
+    if (!deployUniV2SwopReceipt.contractAddress) throw new Error('no contract address for SwopLib')
+
+    // deploy LimitOrderManager
+    const deployContractTxHash = await wallet.deployContract({
+        abi: IntentsContract.abi,
+        bytecode: IntentsContract.bytecode.object.replace(
+            '__$3e2a51d11424ff2a9c7aaa6bf512430723$__',
+            deployUniV2SwopReceipt.contractAddress.slice(2)) as Hex,
+    })
+    const deployContractReceipt = await provider.waitForTransactionReceipt({ hash: deployContractTxHash })
+
+    // Return the contract address from the receipt
+    if (!deployContractReceipt.contractAddress) throw new Error('no contract address')
+    return deployContractReceipt.contractAddress
+}
+/*
+async deploy(): Promise<this> {
+    if (!this.slotLibAddress) {
+        // deploy slot lib
+        const deployLibTxHash = await this.wallet.deployContract({
+            abi: CasinoLibContract.abi,
+            bytecode: CasinoLibContract.bytecode.object as Hex,
+        })
+        const deployLibReceipt = await this.provider.waitForTransactionReceipt({hash: deployLibTxHash})
+        if (!deployLibReceipt.contractAddress) throw new Error('no contract address for SlotLib')
+        this.slotLibAddress = deployLibReceipt.contractAddress
+    } else [
+        console.log('using existing slot lib', this.slotLibAddress)
+    ]
+    const libHashPlaceholder = '__$6eae81b6ed3e33d3852c93ab8dab0df069$__'
+    const deployContractTxHash = await this.wallet.deployContract({
+        abi: SlotsContract.abi,
+        // TODO: replace this with a library link
+        // replace placeholder with lib address (0x sliced)
+        bytecode: SlotsContract.bytecode.object.replace(libHashPlaceholder, this.slotLibAddress.slice(2)) as Hex,
+    })
+    const deployContractReceipt = await this.provider.waitForTransactionReceipt({hash: deployContractTxHash})
+    if (!deployContractReceipt.contractAddress) throw new Error('no contract address')
+    this.slotMachinesAddress = deployContractReceipt.contractAddress
+    return this
+}
+*/
 
 export class LimitOrder<T extends Transport> implements ILimitOrder {
     // ILimitOrder fields
@@ -71,7 +125,7 @@ export class LimitOrder<T extends Transport> implements ILimitOrder {
             data: this.newOrderCalldata(),
             confidentialInputs: this.confidentialInputsBytes(),
             kettleAddress: this.kettleAddress,
-            gasPrice: feeData.baseFeePerGas[0],
+            gasPrice: feeData.baseFeePerGas[0] || 10000000000n,
             gas: 150000n,
             type: SuaveTxRequestTypes.ConfidentialRequest,
         }

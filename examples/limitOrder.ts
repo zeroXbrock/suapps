@@ -55,7 +55,7 @@ async function testIntents<T extends Transport>(
     if (txRes.type !== SuaveTxTypes.Suave) {
       throw new Error('expected SuaveTransaction type (0x50)')
     }
-  
+
     // check `confidentialComputeResult`; should be calldata for `onReceivedIntent`
     const fnSelector: Hex = `0x${IntentsContract.methodIdentifiers['onReceivedIntent((address,address,uint256,uint256,uint256),bytes32,bytes16,uint256)']}`
     const expectedData = [

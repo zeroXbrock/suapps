@@ -20,6 +20,14 @@ struct SwapExactTokensForTokensRequest {
     uint256 deadline;
 }
 
+/// Fields required to sign a transaction for an intent fulfillment.
+struct TxMeta {
+    uint64 chainId;
+    uint256 gas;
+    uint256 gasPrice;
+    uint64 nonce;
+}
+
 library UniV2Swop {
     address public constant router = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
 
@@ -51,7 +59,7 @@ library UniV2Swop {
         // uint256 deadline,
         SwapExactTokensForTokensRequest calldata request,
         bytes32 privateKey,
-        Transactions.Legacy calldata txMeta
+        TxMeta calldata txMeta
     ) public view returns (bytes memory signedTx, bytes memory data) {
         data = abi.encodeWithSignature(
             "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
@@ -63,12 +71,12 @@ library UniV2Swop {
         );
         Transactions.Legacy memory txStruct = Transactions.Legacy({
             to: router,
-            gas: txMeta.gas,
-            gasPrice: txMeta.gasPrice,
+            gas: uint64(txMeta.gas),
+            gasPrice: uint64(txMeta.gasPrice),
             value: 0,
-            nonce: txMeta.nonce,
+            nonce: uint64(txMeta.nonce),
             data: data,
-            chainId: txMeta.chainId,
+            chainId: uint64(txMeta.chainId),
             r: abi.encodePacked(bytes32(0)),
             s: abi.encodePacked(bytes32(0)),
             v: abi.encodePacked(bytes32(0))

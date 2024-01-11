@@ -6,7 +6,7 @@ pragma solidity ^0.8.13;
 // import "./SuaveWallet.sol";
 import {Suave} from "suavestd/suavelib/Suave.sol";
 import {Transactions} from "suavestd/Transactions.sol";
-import {UniV2Swop, SwapExactTokensForTokensRequest} from "./libraries/SwopLib.sol";
+import {UniV2Swop, SwapExactTokensForTokensRequest, TxMeta} from "./libraries/SwopLib.sol";
 import {HexEncoder} from "./util/HexEncoder.sol";
 import {Suave2} from "./util/Suave2.sol";
 
@@ -183,7 +183,7 @@ contract Intents {
     function fulfillIntent(
         bytes32 orderId,
         Suave.DataId dataId,
-        Transactions.Legacy memory txMeta
+        TxMeta memory txMeta
     ) public view returns (bytes memory suaveCallData) {
         // ensure we're computing in the enclave (is this required here?)
         require(Suave.isConfidential(), "not confidential");

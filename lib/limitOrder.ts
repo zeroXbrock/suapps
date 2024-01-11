@@ -22,6 +22,7 @@ export interface ILimitOrder {
     amountInMax: bigint
     amountOutMin: bigint
     expiryTimestamp: bigint
+    to: Address
     senderKey: Hex
 }
 
@@ -88,6 +89,7 @@ export class LimitOrder<T extends Transport> implements ILimitOrder {
     client: SuaveProvider<T>
     contractAddress: Address
     kettleAddress: Address
+    to: Address
 
     constructor(params: ILimitOrder, client: SuaveProvider<T>, contractAddress: Address, kettleAddress: Address) {
         this.tokenIn = params.tokenIn
@@ -99,17 +101,20 @@ export class LimitOrder<T extends Transport> implements ILimitOrder {
         this.client = client
         this.contractAddress = contractAddress
         this.kettleAddress = kettleAddress
+        this.to = params.to
     }
 
     inner(): ILimitOrder {
-        return {
-            tokenIn: this.tokenIn,
-            tokenOut: this.tokenOut,
-            amountInMax: this.amountInMax,
-            amountOutMin: this.amountOutMin,
-            expiryTimestamp: this.expiryTimestamp,
-            senderKey: this.senderKey,
-        }
+        // return {
+        //     tokenIn: this.tokenIn,
+        //     tokenOut: this.tokenOut,
+        //     amountInMax: this.amountInMax,
+        //     amountOutMin: this.amountOutMin,
+        //     expiryTimestamp: this.expiryTimestamp,
+        //     senderKey: this.senderKey,
+        //     to: this.to,
+        // }
+        return this as ILimitOrder // idk if type coercion is actually necessary but hey why not
     }
 
     orderId(): Hex {
@@ -133,30 +138,31 @@ export class LimitOrder<T extends Transport> implements ILimitOrder {
 
     private confidentialInputsBytes(): Hex {
         return encodeAbiParameters([
-            {type: 'address', name: 'token_in'},
-            {type: 'address', name: 'token_out'},
-            {type: 'uint256', name: 'amount_in_max'},
-            {type: 'uint256', name: 'amount_out_min'},
-            {type: 'uint256', name: 'expiry_timestamp'},
-            {type: 'bytes32', name: 'sender_key'}
+            {type: 'address', name: 'tokenIn'},
+            {type: 'address', name: 'tokenOut'},
+            {type: 'uint256', name: 'amountIn'},
+            {type: 'uint256', name: 'amountOutMin'},
+            {type: 'uint256', name: 'expiryTimestamp'},
+            {type: 'address', name: 'to'},
+            {type: 'bytes32', name: 'senderKey'},
         ], [
             this.tokenIn,
             this.tokenOut,
             this.amountInMax,
             this.amountOutMin,
             this.expiryTimestamp,
+            this.to,
             this.senderKey,
         ])
     }
 
-
     private publicBytes(): Hex {
         return encodeAbiParameters([
-            {type: 'address', name: 'token_in'},
-            {type: 'address', name: 'token_out'},
-            {type: 'uint256', name: 'amount_in_max'},
-            {type: 'uint256', name: 'amount_out_min'},
-            {type: 'uint256', name: 'expiry_timestamp'},
+            {type: 'address', name: 'tokenIn'},
+            {type: 'address', name: 'tokenOut'},
+            {type: 'uint256', name: 'amountIn'},
+            {type: 'uint256', name: 'amountOutMin'},
+            {type: 'uint256', name: 'expiryTimestamp'},
         ], [
             this.tokenIn,
             this.tokenOut,

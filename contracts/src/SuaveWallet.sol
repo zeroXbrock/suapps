@@ -22,17 +22,21 @@ contract SuaveWallet is Ownable(msg.sender) {
         emit Noop(msg.data);
     }
 
+    receive() external payable {
+        emit Noop(new bytes(0x5));
+    }
+
     constructor(uint256 _chainId) {
         // key = bytes32(Suave.randomUint());
         // chain_id = _chainId;
         // save stringified version of private key
         // TODO: store keys in ConfidentialStore, not in the contract
         initialized = false;
-        s_chainId = HexEncoder.bytes32ToHexString(bytes32(_chainId));
+        s_chainId = HexEncoder.toHexString(_chainId);
     }
 
     function initialize() public onlyOwner returns (address walletAddress) {
-        s_key = HexEncoder.bytes32ToHexString(bytes32(Suave.randomUint()));
+        s_key = HexEncoder.toHexString(Suave.randomUint());
         // Suave.s
     }
 

@@ -10,7 +10,7 @@ import "./HexEncoder.sol";
 contract HexEncoderTest is Test {
     function testEncodeUint() public {
         uint256 x = 0x12345678;
-        string memory s = HexEncoder.bytes32ToHexString(bytes32(x));
+        string memory s = HexEncoder.toHexString(x);
         assertEq(
             s,
             "0000000000000000000000000000000000000000000000000000000012345678"
@@ -21,7 +21,7 @@ contract HexEncoderTest is Test {
         bytes32 x = bytes32(
             0x1020304050607080901011012013014015016017018019020210220230240256
         );
-        string memory s = HexEncoder.bytes32ToHexString(bytes32(x));
+        string memory s = HexEncoder.toHexString(bytes32(x));
         assertEq(
             s,
             "1020304050607080901011012013014015016017018019020210220230240256"

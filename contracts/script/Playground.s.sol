@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import {Script, console2} from "forge-std/Script.sol";
 import {UniV2Swop} from "../src/libraries/SwopLib.sol";
 
+// TODO: add SuaveEnabled
 contract PlaygroundScript is Script {
     function setUp() public pure {
         console2.log(

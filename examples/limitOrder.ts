@@ -47,7 +47,7 @@ async function testIntents<T extends Transport>(
         console.warn('error', e)
       }
     }
-    // TODO: fix this error: `txRes: TransactionSuave` => "Types of property 'chainId' are incompatible."
+
     const txRes = await suaveProvider.getTransaction({hash: limitOrderTxHash})
     console.log("txRes", txRes)
   
@@ -70,7 +70,7 @@ async function testIntents<T extends Transport>(
       (acc, cur) => concatHex([acc, cur])
     )
 
-    // this test is extremely sensitive to changes. uncomment if/when changing the contract to reduce stress.
+    // this test is extremely sensitive to changes. comment out if/when changing the contract to reduce stress.
     const expectedRawResult = concatHex([fnSelector, expectedData])
     if (!txRes.confidentialComputeResult.startsWith(expectedRawResult.toLowerCase())) {
       throw new Error('expected confidential compute result to be calldata for `onReceivedIntent`')
@@ -121,6 +121,7 @@ async function getAmountOut(routerAddress: Hex, goerliProvider: PublicClient) {
 }
 
 async function main() {
+  /* call getAmountOut directly on goerli */
   const goerliProvider = createPublicClient({
     transport: http(goerli.rpcUrls.public.http[0]),
   })

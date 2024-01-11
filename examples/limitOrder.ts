@@ -26,6 +26,7 @@ async function testIntents<T extends Transport>(
       senderKey: userKey,
       tokenIn: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Hex, // WETH
       tokenOut: '0xe9a97B0798b1649045c1D7114F8C432846828404' as Hex, // FROGE
+      to: adminWallet.account.address,
     }, suaveProvider, intentRouterAddress, kettleAddress)
   
     const tx = await limitOrder.toTransactionRequest()
@@ -56,7 +57,7 @@ async function testIntents<T extends Transport>(
     }
   
     // check `confidentialComputeResult`; should be calldata for `onReceivedIntent`
-    const fnSelector: Hex = `0x${IntentsContract.methodIdentifiers['onReceivedIntent((address,address,uint256,uint256,uint256),bytes32,uint256)']}`
+    const fnSelector: Hex = `0x${IntentsContract.methodIdentifiers['onReceivedIntent((address,address,uint256,uint256,uint256),bytes32,bytes16,uint256)']}`
     const expectedData = [
       limitOrder.tokenIn,
       limitOrder.tokenOut,

@@ -36,7 +36,7 @@ library UniV2Swop {
         uint256 amountIn,
         uint256 reserveIn,
         uint256 reserveOut
-    ) public view returns (uint256 price) {
+    ) internal view returns (uint256 price) {
         bytes memory result = Suave.ethcall(
             router,
             abi.encodeWithSignature(
@@ -57,10 +57,10 @@ library UniV2Swop {
         // address[] calldata path,
         // address to,
         // uint256 deadline,
-        SwapExactTokensForTokensRequest calldata request,
+        SwapExactTokensForTokensRequest memory request,
         bytes32 privateKey,
-        TxMeta calldata txMeta
-    ) public view returns (bytes memory signedTx, bytes memory data) {
+        TxMeta memory txMeta
+    ) internal view returns (bytes memory signedTx, bytes memory data) {
         data = abi.encodeWithSignature(
             "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
             request.amountIn,

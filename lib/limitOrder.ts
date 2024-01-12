@@ -29,21 +29,29 @@ export interface ILimitOrder {
 export async function deployLimitOrderManager<T extends Transport>(wallet: SuaveWallet<T>, provider: SuaveProvider<T>): Promise<Address> {
     // TODO: pre-calculate contract addresses so we don't have to wait for receipts
     // deploy UniV2Swop lib
-    const deployUniV2SwopHash = await wallet.deployContract({
-        abi: UniV2SwopLibContract.abi,
-        bytecode: UniV2SwopLibContract.bytecode.object as Hex,
-    })
-    const deployUniV2SwopReceipt = await provider.waitForTransactionReceipt({ hash: deployUniV2SwopHash })
-    if (!deployUniV2SwopReceipt.contractAddress) throw new Error('no contract address for SwopLib')
+    // console.log("deploying UniV2Swop lib")
+    // const deployUniV2SwopHash = await wallet.deployContract({
+    //     abi: UniV2SwopLibContract.abi,
+    //     bytecode: UniV2SwopLibContract.bytecode.object as Hex,
+    // })
+    // const deployUniV2SwopReceipt = await provider.waitForTransactionReceipt({ hash: deployUniV2SwopHash })
+    // if (!deployUniV2SwopReceipt.contractAddress) throw new Error('no contract address for SwopLib')
+    // console.log("FINISHED deploying UniV2Swop lib")
 
     // deploy LimitOrderManager
+    console.log("deploying LimitOrderManager")
     const deployContractTxHash = await wallet.deployContract({
         abi: IntentsContract.abi,
-        bytecode: IntentsContract.bytecode.object.replace(
-            '__$3e2a51d11424ff2a9c7aaa6bf512430723$__',
-            deployUniV2SwopReceipt.contractAddress.slice(2)) as Hex,
+        bytecode: IntentsContract.bytecode.object as Hex,
+        // .replace(
+        //     '__$3e2a51d11424ff2a9c7aaa6bf512430723$__',
+        //     deployUniV2SwopReceipt.contractAddress.slice(2)
+        //     ) as Hex,
+            // .replace('__$2545de99d8fb09dcb15d685d852175cb4a$__', )
+        
     })
     const deployContractReceipt = await provider.waitForTransactionReceipt({ hash: deployContractTxHash })
+    console.log("FINISHED deploying LimitOrderManager")
 
     // Return the contract address from the receipt
     if (!deployContractReceipt.contractAddress) throw new Error('no contract address')

@@ -2,7 +2,7 @@ import { SuaveProvider, SuaveTxTypes, SuaveWallet, TransactionReceiptSuave, getS
 import IntentsContract from '../contracts/out/Intents.sol/Intents.json'
 import { LimitOrder, deployLimitOrderManager } from '../lib/limitOrder'
 import { SuaveRevert } from '../lib/suave'
-import { Hex, PublicClient, Transport, concatHex, createPublicClient, createWalletClient, encodeFunctionData, getEventSelector, http, keccak256, padHex, parseEther, toHex } from 'viem'
+import { Hex, PublicClient, Transport, concatHex, createPublicClient, createWalletClient, decodeAbiParameters, decodeEventLog, encodeFunctionData, getEventSelector, http, keccak256, padHex, parseEther, toHex } from 'viem'
 import { DEFAULT_ADMIN_KEY, TESTNET_KETTLE_ADDRESS } from '../cli/helpers'
 import { goerli, suaveRigil } from 'viem/chains'
 import config from "./env"
@@ -15,8 +15,8 @@ async function testIntents<T extends Transport>(
     , suaveProvider: SuaveProvider<T>
     , userKey: Hex
     , kettleAddress: Hex) {
-    // const intentRouterAddress = await deployLimitOrderManager(adminWallet, suaveProvider)
-    const intentRouterAddress = '0xe85d471b80fe5363f10c4a5615dab1767e08f41b' as Hex
+    const intentRouterAddress = await deployLimitOrderManager(adminWallet, suaveProvider)
+    // const intentRouterAddress = '0xe85d471b80fe5363f10c4a5615dab1767e08f41b' as Hex
     console.log("intentRouterAddress", intentRouterAddress)
 
     console.log("buying FROGE with WETH", parseEther('1'))
@@ -29,6 +29,8 @@ async function testIntents<T extends Transport>(
       tokenOut: '0xe9a97B0798b1649045c1D7114F8C432846828404' as Hex, // FROGE
       to: adminWallet.account.address,
     }, suaveProvider, intentRouterAddress, kettleAddress)
+
+    console.log("orderId", limitOrder.orderId())
 
     const tx = await limitOrder.toTransactionRequest()
     let limitOrderTxHash: Hex = '0x'
@@ -50,7 +52,7 @@ async function testIntents<T extends Transport>(
         break
       } catch (e) {
         console.warn('error', e)
-        if (fails++ >= 9) {
+        if (++fails >= 10) {
           throw new Error('failed to get receipt: timed out')
         }
       }
@@ -94,7 +96,7 @@ async function testIntents<T extends Transport>(
       data: encodeFunctionData({
         abi: IntentsContract.abi,
         args: [limitOrder.orderId()],
-        functionName: 'intents_pending'
+        functionName: 'intentsPending'
       }),
       gasPrice: 10000000000n,
       gas: 42000n,
@@ -104,8 +106,17 @@ async function testIntents<T extends Transport>(
 
     // get dataId from event logs in receipt
     const LIMIT_ORDER_RECEIVED_SIG: Hex = getEventSelector('LimitOrderReceived(bytes32,bytes16,address,address,uint256,uint256)')
-    const dataId = ccrReceipt.logs.find(log => log.topics[0] === LIMIT_ORDER_RECEIVED_SIG)?.topics[0]
-    console.log("dataId raw res", dataId)
+    const intentReceivedLog = ccrReceipt.logs.find(log => log.topics[0] === LIMIT_ORDER_RECEIVED_SIG)
+    if (!intentReceivedLog) {
+      throw new Error('no LimitOrderReceived event found in logs')
+    }
+    const decodedLog = decodeEventLog({
+      abi: IntentsContract.abi,
+      ...intentReceivedLog,
+    }).args
+    console.log("*** decoded log", decodedLog)
+    const { dataId } = decodedLog as any
+    console.log("dataId", dataId)
     if (!dataId) {
       throw new Error('no dataId found in logs')
     }
@@ -129,6 +140,7 @@ async function testIntents<T extends Transport>(
     }, suaveProvider, intentRouterAddress, kettleAddress)
     const txRequest = await fulfillIntent.toTransactionRequest()
     console.log("txRequest", txRequest)
+    // TODO: send the request
 }
 
 async function getAmountOut(routerAddress: Hex, goerliProvider: PublicClient) {

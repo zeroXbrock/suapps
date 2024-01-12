@@ -65,7 +65,7 @@ library Suave2 {
     /// Note: the request must be a full bundle, not a placeholder bundle.
     function encodeBundleRequestJson(
         SendBundleRequest memory request
-    ) public pure returns (bytes memory) {
+    ) internal pure returns (bytes memory) {
         string memory json = "{";
         json = string.concat(json, '"txs":');
         json = jsonArrayParam(json, request.txs);
@@ -96,7 +96,7 @@ library Suave2 {
     // possibly the most breakable solidity function ever to exist.
     function eth_getBlockNumber(
         string memory rpcUrl
-    ) public view returns (uint256 blockNumber) {
+    ) internal view returns (uint256 blockNumber) {
         string[] memory headers = new string[](1);
         headers[0] = "Content-Type: application/json";
         Suave.HttpRequest memory request = Suave.HttpRequest({

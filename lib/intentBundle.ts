@@ -2,22 +2,16 @@ import {
     Address,
     Hash,
     Hex,
-    TransactionLegacy,
-    TransactionRequestLegacy,
     Transport,
     encodeAbiParameters,
     encodeFunctionData,
-    keccak256,
     parseAbi
 } from 'viem'
 import {
     SuaveProvider,
     SuaveTxRequestTypes,
-    SuaveWallet,
     TransactionRequestSuave
 } from 'viem/chains/utils'
-import IntentsContract from '../contracts/out/Intents.sol/Intents.json'
-import UniV2SwopLibContract from '../contracts/out/SwopLib.sol/UniV2Swop.json'
 
 export const TX_PLACEHOLDER: Hex = '0xf00d'
 
@@ -136,7 +130,7 @@ export class FulfillIntentRequest<T extends Transport> implements IFulfillIntent
             confidentialInputs: this.confidentialInputsBytes(),
             kettleAddress: this.kettleAddress,
             gasPrice: feeData.baseFeePerGas[0] || 10000000000n,
-            gas: 150000n,
+            gas: 250000n,
             type: SuaveTxRequestTypes.ConfidentialRequest,
         }
     }

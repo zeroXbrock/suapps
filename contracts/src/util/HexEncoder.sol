@@ -9,7 +9,20 @@ library HexEncoder {
             result[i * 2] = _hexChar(uint8(byteValue) / 16);
             result[i * 2 + 1] = _hexChar(uint8(byteValue) % 16);
         }
-        return string(result);
+
+        // remove leading zeros
+        uint16 lastIndex;
+        for (uint16 i = 0; i < 63; i++) {
+            if (result[i] != bytes1("0")) {
+                lastIndex = uint16(i);
+                break;
+            }
+        }
+        bytes memory result2 = new bytes(result.length - lastIndex);
+        for (uint16 i = 0; i < result2.length; i++) {
+            result2[i] = result[i + lastIndex];
+        }
+        return string(result2);
     }
 
     function toHexString(
@@ -21,7 +34,20 @@ library HexEncoder {
             result[i * 2] = _hexChar(uint8(byteValue) / 16);
             result[i * 2 + 1] = _hexChar(uint8(byteValue) % 16);
         }
-        return string(result);
+
+        // remove leading zeros
+        uint16 lastIndex;
+        for (uint16 i = 0; i < 63; i++) {
+            if (result[i] != bytes1("0")) {
+                lastIndex = uint16(i);
+                break;
+            }
+        }
+        bytes memory result2 = new bytes(result.length - lastIndex);
+        for (uint16 i = 0; i < result2.length; i++) {
+            result2[i] = result[i + lastIndex];
+        }
+        return string(result2);
     }
 
     function toHexString(uint256 value) internal pure returns (string memory) {
@@ -31,7 +57,20 @@ library HexEncoder {
             result[i * 2] = _hexChar(uint8(byteValue) / 16);
             result[i * 2 + 1] = _hexChar(uint8(byteValue) % 16);
         }
-        return string(result);
+
+        // remove leading zeros
+        uint16 lastIndex;
+        for (uint16 i = 0; i < 63; i++) {
+            if (result[i] != bytes1("0")) {
+                lastIndex = uint16(i);
+                break;
+            }
+        }
+        bytes memory result2 = new bytes(result.length - lastIndex);
+        for (uint16 i = 0; i < result2.length; i++) {
+            result2[i] = result[i + lastIndex];
+        }
+        return string(result2);
     }
 
     function _hexChar(uint8 value) internal pure returns (bytes1) {

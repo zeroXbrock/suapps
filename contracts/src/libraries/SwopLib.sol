@@ -52,11 +52,6 @@ library UniV2Swop {
     /// Swap tokens on Uniswap V2. Returns raw signed tx, which can be broadcasted.
     /// txMeta must contain chainId, gas, gasPrice, and nonce.
     function swapExactTokensForTokens(
-        // uint256 amountIn,
-        // uint256 amountOutMin,
-        // address[] calldata path,
-        // address to,
-        // uint256 deadline,
         SwapExactTokensForTokensRequest memory request,
         bytes32 privateKey,
         TxMeta memory txMeta
@@ -69,22 +64,23 @@ library UniV2Swop {
             request.to,
             request.deadline
         );
+        bytes memory emptyBytes = new bytes(0);
         Transactions.Legacy memory txStruct = Transactions.Legacy({
             to: router,
             gas: uint64(txMeta.gas),
             gasPrice: uint64(txMeta.gasPrice),
             value: 0,
-            nonce: uint64(txMeta.nonce),
+            nonce: txMeta.nonce,
             data: data,
-            chainId: uint64(txMeta.chainId),
-            r: abi.encodePacked(bytes32(0)),
-            s: abi.encodePacked(bytes32(0)),
-            v: abi.encodePacked(bytes32(0))
+            chainId: txMeta.chainId,
+            r: emptyBytes,
+            s: emptyBytes,
+            v: emptyBytes
         });
         bytes memory rlpTx = Transactions.encodeRLP(txStruct);
         signedTx = Suave.signEthTransaction(
             rlpTx,
-            HexEncoder.toHexString(uint256(txMeta.chainId)),
+            HexEncoder.toHexString(txMeta.chainId), // TODO: use txMeta.chainId (string encoding is being troublesome)
             HexEncoder.toHexString(privateKey)
         );
     }

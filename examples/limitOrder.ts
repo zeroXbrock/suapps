@@ -1,8 +1,25 @@
-import { SuaveProvider, SuaveTxTypes, SuaveWallet, TransactionReceiptSuave, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
+import { SuaveProvider, SuaveTxTypes, SuaveWallet, TransactionReceiptSuave, TransactionRequestSuave, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
 import IntentsContract from '../contracts/out/Intents.sol/Intents.json'
-import { LimitOrder, deployLimitOrderManager } from '../lib/limitOrder'
+import { 
+  LimitOrder, deployLimitOrderManager,
+  // deployLimitOrderManager
+} from '../lib/limitOrder'
 import { SuaveRevert } from '../lib/suave'
-import { Hex, PublicClient, Transport, concatHex, createPublicClient, createWalletClient, decodeAbiParameters, decodeEventLog, encodeFunctionData, getEventSelector, http, keccak256, padHex, parseEther, toHex } from 'viem'
+import { 
+  Hex,
+  PublicClient,
+  Transport,
+  concatHex,
+  createPublicClient,
+  createWalletClient,
+  decodeEventLog,
+  encodeFunctionData,
+  getEventSelector,
+  http,
+  padHex,
+  parseEther,
+  toHex
+} from 'viem'
 import { DEFAULT_ADMIN_KEY, TESTNET_KETTLE_ADDRESS } from '../cli/helpers'
 import { goerli, suaveRigil } from 'viem/chains'
 import config from "./env"
@@ -16,8 +33,20 @@ async function testIntents<T extends Transport>(
     , userKey: Hex
     , kettleAddress: Hex) {
     const intentRouterAddress = await deployLimitOrderManager(adminWallet, suaveProvider)
-    // const intentRouterAddress = '0xe85d471b80fe5363f10c4a5615dab1767e08f41b' as Hex
+    // const intentRouterAddress = '0x8a0668a89f69fba939745eebfa7bd7fca433a0b3' as Hex
     console.log("intentRouterAddress", intentRouterAddress)
+
+    // automagically decode revert messages before throwing them
+    // TODO: build this natively into the wallet client
+    adminWallet = adminWallet.extend((client) => ({
+      async sendTransaction(tx: TransactionRequestSuave): Promise<Hex> {
+        try {
+          return await client.sendTransaction(tx)
+        } catch (e) {
+          throw new SuaveRevert(e as Error)
+        }
+      }
+    }))
 
     console.log("buying FROGE with WETH", parseEther('1'))
     const limitOrder = new LimitOrder({
@@ -34,12 +63,7 @@ async function testIntents<T extends Transport>(
 
     const tx = await limitOrder.toTransactionRequest()
     let limitOrderTxHash: Hex = '0x'
-    try {
-      limitOrderTxHash = await adminWallet.sendTransaction(tx)
-    } catch (e) {
-      // TODO: would be nice to have this as the default response in the client
-      throw new SuaveRevert(e as Error)
-    }
+    limitOrderTxHash = await adminWallet.sendTransaction(tx)
     console.log("limitOrderTxHash", limitOrderTxHash)
 
     let ccrReceipt: TransactionReceiptSuave | null = null
@@ -130,6 +154,7 @@ async function testIntents<T extends Transport>(
       address: adminWallet.account.address
     })
     const blockNumber = await goerliProvider.getBlockNumber()
+
     // fulfill order
     const fulfillIntent = new FulfillIntentRequest({
       orderId: limitOrder.orderId(),
@@ -139,8 +164,15 @@ async function testIntents<T extends Transport>(
       blockNumber: blockNumber + 1n,
     }, suaveProvider, intentRouterAddress, kettleAddress)
     const txRequest = await fulfillIntent.toTransactionRequest()
-    console.log("txRequest", txRequest)
-    // TODO: send the request
+    console.log("fulfillOrder txRequest", txRequest)
+
+    // send the CCR
+    const fulfillIntentTxHash = await adminWallet.sendTransaction(txRequest)
+    console.log("fulfillIntentTxHash", fulfillIntentTxHash)
+
+    // wait for tx receipt, then log it
+    const fulfillIntentReceipt = await suaveProvider.waitForTransactionReceipt({hash: fulfillIntentTxHash})
+    console.log("fulfillIntentReceipt", fulfillIntentReceipt)
 }
 
 async function getAmountOut(routerAddress: Hex, goerliProvider: PublicClient) {

@@ -28,7 +28,7 @@ export type ITxMeta = {
     chainId: number
 }
 
-class TxMeta implements ITxMeta {
+export class TxMeta implements ITxMeta {
     gas: bigint
     gasPrice: bigint
     nonce: number
@@ -76,7 +76,28 @@ export interface IFulfillIntentRequest {
     dataId: Hex // bytes16
     txMeta: TxMeta
     // confidential input
-    bundle: Hex[]
+    bundleTxs: Hex[]
+    blockNumber: bigint
+}
+
+/** Build a bundle around a tx placeholder.
+ * Felt cute, might delete later.
+*/
+export class Bundle {
+    signedTxs: Hex[]
+    constructor() {
+        this.signedTxs = ['0xf00d']
+    }
+
+    frontload(txs: Hex[]): this {
+        this.signedTxs = [...txs, ...this.signedTxs]
+        return this
+    }
+
+    backload(txs: Hex[]): this {
+        this.signedTxs = [...this.signedTxs, ...txs]
+        return this
+    }
 }
 
 export class FulfillIntentRequest<T extends Transport> implements IFulfillIntentRequest {
@@ -89,7 +110,8 @@ export class FulfillIntentRequest<T extends Transport> implements IFulfillIntent
     dataId: Hex
     txMeta: TxMeta
     // confidential input
-    bundle: Hex[]
+    bundleTxs: Hex[]
+    blockNumber: bigint
 
     constructor(params: IFulfillIntentRequest, client: SuaveProvider<T>, contractAddress: Address, kettleAddress: Address) {
         this.client = client
@@ -98,9 +120,10 @@ export class FulfillIntentRequest<T extends Transport> implements IFulfillIntent
         this.orderId = params.orderId
         this.dataId = params.dataId
         this.txMeta = params.txMeta
-        this.bundle = params.bundle
+        this.bundleTxs = params.bundleTxs
+        this.blockNumber = params.blockNumber
 
-        if (!params.bundle.includes(TX_PLACEHOLDER)) {
+        if (!params.bundleTxs.includes(TX_PLACEHOLDER)) {
             throw new Error(`bundle must include tx placeholder: "${TX_PLACEHOLDER}"`)
         }
     }
@@ -119,10 +142,18 @@ export class FulfillIntentRequest<T extends Transport> implements IFulfillIntent
     }
 
     private confidentialInputsBytes(): Hex {
+        /**
+        FulfillIntentBundle {
+            bytes[] txs;
+            uint256 blockNumber;
+        }
+         */
         return encodeAbiParameters([
-            {type: 'bytes[]'}
+            {type: 'bytes[]', name: 'txs'},
+            {type: 'uint256', name: 'blockNumber'},
         ], [
-            this.bundle
+            this.bundleTxs,
+            this.blockNumber,
         ])
     }
 

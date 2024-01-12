@@ -31,6 +31,11 @@ struct LimitOrderPublic {
     uint256 expiryTimestamp;
 }
 
+struct FulfillIntentBundle {
+    bytes[] txs;
+    uint256 blockNumber;
+}
+
 contract Intents {
     // we probably shouldn't be storing intents in storage
     // TODO: make a stateless design
@@ -174,8 +179,12 @@ contract Intents {
 
     /// Fulfill an intent.
     /// Bundle is expected to be in `confidentialInputs` in the form of:
-    ///     [...signedTxs, TX_PLACEHOLDER, ...signedTxs]
-    /// e.g. [
+    ///   rlp({
+    ///     txs: [...signedTxs, TX_PLACEHOLDER, ...signedTxs],
+    ///     blockNumber: 0x42
+    ///   })
+    ///
+    /// example bundle.txs: [
     ///     "0x02...1",  // signedTx 1
     ///     "0xf00d",   // TX_PLACEHOLDER
     ///     "0x02...2" // signedTx 2
@@ -225,15 +234,15 @@ contract Intents {
         // require(simRes.success, "tx failed");
 
         // load bundle from confidentialInputs
-        bytes[] memory bundle = abi.decode(
+        FulfillIntentBundle memory bundle = abi.decode(
             Suave.confidentialInputs(),
-            (bytes[])
+            (FulfillIntentBundle)
         );
 
         // assemble the full bundle by replacing the bundle entry marked with the placeholder
-        for (uint256 i = 0; i < bundle.length; i++) {
-            if (bytes2(bundle[i]) == TX_PLACEHOLDER) {
-                bundle[i] = signedTx;
+        for (uint256 i = 0; i < bundle.txs.length; i++) {
+            if (bytes2(bundle.txs[i]) == TX_PLACEHOLDER) {
+                bundle.txs[i] = signedTx;
                 break;
             }
         }
@@ -241,8 +250,8 @@ contract Intents {
         // encode bundle request
         bytes memory bundleReq = Suave2.encodeBundleRequestJson(
             Suave2.SendBundleRequest({
-                txs: bundle,
-                blockNumber: 0,
+                txs: bundle.txs,
+                blockNumber: bundle.blockNumber,
                 minTimestamp: 0,
                 maxTimestamp: 0,
                 revertingTxHashes: new bytes32[](0),

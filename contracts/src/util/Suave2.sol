@@ -25,7 +25,7 @@ library Suave2 {
         uint256 value
     ) internal pure returns (string memory json) {
         json = string.concat(_json, '"0x');
-        json = string.concat(json, HexEncoder.toHexString(value));
+        json = string.concat(json, HexEncoder.toHexString(value, true));
         json = string.concat(json, '"');
     }
 
@@ -39,7 +39,7 @@ library Suave2 {
                 json = string.concat(json, ",");
             }
             json = string.concat(json, '"0x');
-            json = string.concat(json, HexEncoder.toHexString(values[i]));
+            json = string.concat(json, HexEncoder.toHexString(values[i], true));
             json = string.concat(json, '"');
         }
         json = string.concat(json, "]");
@@ -55,7 +55,7 @@ library Suave2 {
                 json = string.concat(json, ",");
             }
             json = string.concat(json, '"0x');
-            json = string.concat(json, HexEncoder.toHexString(values[i]));
+            json = string.concat(json, HexEncoder.toHexString(values[i], true));
             json = string.concat(json, '"');
         }
         json = string.concat(json, "]");

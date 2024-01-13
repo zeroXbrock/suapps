@@ -16,6 +16,7 @@ import {
   encodeFunctionData,
   getEventSelector,
   http,
+  keccak256,
   padHex,
   parseEther,
   toHex
@@ -23,7 +24,7 @@ import {
 import { DEFAULT_ADMIN_KEY, TESTNET_KETTLE_ADDRESS } from '../cli/helpers'
 import { goerli, suaveRigil } from 'viem/chains'
 import config from "./env"
-import { privateKeyToAccount } from 'viem/accounts'
+import { privateKeyToAccount, sign, signTransaction } from 'viem/accounts'
 import { ETH } from '../lib/utils'
 import { Bundle, FulfillIntentRequest, TxMeta } from '../lib/intentBundle'
 

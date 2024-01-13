@@ -64,7 +64,7 @@ library UniV2Swop {
             request.to,
             request.deadline
         );
-        bytes memory emptyBytes = new bytes(0);
+        // bytes memory emptyBytes = new bytes(0);
         Transactions.Legacy memory txStruct = Transactions.Legacy({
             to: router,
             gas: uint64(txMeta.gas),
@@ -72,16 +72,17 @@ library UniV2Swop {
             value: 0,
             nonce: txMeta.nonce,
             data: data,
-            chainId: txMeta.chainId,
-            r: emptyBytes,
-            s: emptyBytes,
-            v: emptyBytes
+            chainId: txMeta.chainId
+            // r: emptyBytes,
+            // s: emptyBytes,
+            // v: emptyBytes
         });
         bytes memory rlpTx = Transactions.encodeRLP(txStruct);
         signedTx = Suave.signEthTransaction(
             rlpTx,
-            HexEncoder.toHexString(txMeta.chainId), // TODO: use txMeta.chainId (string encoding is being troublesome)
-            HexEncoder.toHexString(privateKey)
+            HexEncoder.toHexString(txMeta.chainId, true), // TODO: use txMeta.chainId (string encoding is being troublesome)
+            HexEncoder.toHexString(privateKey, false)
         );
+        return (signedTx, data);
     }
 }

@@ -21,25 +21,31 @@ contract SwopLibTest is Test, SuaveEnabled {
         assert(timestamp > 1705098666);
     }
 
-    function testSwapExactTokensForTokens() public view {
+    function testSwapExactTokensForTokens() public {
         SwapExactTokensForTokensRequest
             memory request = SwapExactTokensForTokensRequest({
                 amountIn: 100,
-                amountOutMin: 0,
+                amountOutMin: 120,
                 path: new address[](2),
                 to: address(0x420),
-                deadline: 0
+                deadline: getTimestampSeconds() + 3600
             });
         bytes32 privateKey = keccak256(abi.encodePacked(uint32(0xf331900d)));
-        console2.log("privateKey: %s", HexEncoder.toHexString(privateKey));
+        console2.log(
+            "privateKey: %s",
+            HexEncoder.toHexString(privateKey, false)
+        );
         TxMeta memory txMeta = TxMeta({
-            chainId: 1,
+            chainId: 5,
             gas: 100000,
             gasPrice: 1000000000,
             nonce: 0
         });
+        console2.log("chainId: %d", txMeta.chainId);
         (bytes memory signedTx, bytes memory data) = UniV2Swop
             .swapExactTokensForTokens(request, privateKey, txMeta);
+        console2.log("rawTx: %s", HexEncoder.toHexString(signedTx, false));
+        console2.log("data: %s", HexEncoder.toHexString(data, false));
         // TODO: be more assertive
     }
 }

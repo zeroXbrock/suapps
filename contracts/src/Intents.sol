@@ -146,7 +146,7 @@ contract Intents {
         );
         Suave.confidentialStore(
             record.id,
-            HexEncoder.toHexString(orderId),
+            HexEncoder.toHexString(orderId, true),
             abi.encode(order.senderKey, order.to)
         );
 
@@ -201,7 +201,10 @@ contract Intents {
         require(order.amountIn > 0, "intent not found");
 
         (bytes32 privateKey, address to) = abi.decode(
-            Suave.confidentialRetrieve(dataId, HexEncoder.toHexString(orderId)),
+            Suave.confidentialRetrieve(
+                dataId,
+                HexEncoder.toHexString(orderId, true)
+            ),
             (bytes32, address)
         );
         address[] memory path = new address[](2);

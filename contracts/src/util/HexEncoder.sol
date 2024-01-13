@@ -105,7 +105,7 @@ library HexEncoder {
         uint charsLength // byteLength * 2
     ) internal pure returns (bytes memory) {
         uint lastIndex;
-        for (uint i = 0; i < charsLength - 1; i++) {
+        for (uint i = 0; i < charsLength; i++) {
             if (value[i] != bytes1("0")) {
                 lastIndex = uint(i);
                 break;

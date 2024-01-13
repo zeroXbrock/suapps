@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {console2} from "forge-std/console2.sol";
-
 library HexEncoder {
     function _encodeUint(
         uint256 value
@@ -33,6 +31,40 @@ library HexEncoder {
         uint256 byteLength
     ) internal pure returns (bytes memory result) {
         result = _encodeBytes(abi.encodePacked(value), byteLength);
+    }
+
+    function toHexString(
+        bytes32 value,
+        bool removeLeadingZeros,
+        bool addHexPrefix
+    ) internal pure returns (string memory hexString) {
+        hexString = toHexString(value, removeLeadingZeros);
+        if (addHexPrefix) {
+            return string.concat("0x", hexString);
+        }
+    }
+
+    function toHexString(
+        uint256 value,
+        bool removeLeadingZeros,
+        bool addHexPrefix
+    ) internal pure returns (string memory hexString) {
+        hexString = toHexString(
+            bytes32(value),
+            removeLeadingZeros,
+            addHexPrefix
+        );
+    }
+
+    function toHexString(
+        bytes memory value,
+        bool removeLeadingZeros,
+        bool addHexPrefix
+    ) internal pure returns (string memory hexString) {
+        hexString = toHexString(value, removeLeadingZeros);
+        if (addHexPrefix) {
+            return string.concat("0x", hexString);
+        }
     }
 
     function toHexString(

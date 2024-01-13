@@ -29,6 +29,8 @@ contract HexEncoderTest is Test {
             s,
             "0000000050607080901011012013014015016017018019020210220230240256"
         );
+        s = HexEncoder.toHexString(x, true);
+        assertEq(s, "50607080901011012013014015016017018019020210220230240256");
     }
 
     function testEncodeBytes() public {

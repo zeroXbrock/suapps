@@ -17,7 +17,6 @@ import {
   formatEther,
   getEventSelector,
   http,
-  keccak256,
   padHex,
   parseEther,
   toHex
@@ -25,25 +24,29 @@ import {
 import { DEFAULT_ADMIN_KEY, TESTNET_KETTLE_ADDRESS } from '../cli/helpers'
 import { goerli, suaveRigil } from 'viem/chains'
 import config from "./env"
-import { privateKeyToAccount, sign, signTransaction } from 'viem/accounts'
+import { privateKeyToAccount } from 'viem/accounts'
 import { ETH } from '../lib/utils'
 import { Bundle, FulfillIntentRequest, TxMeta } from '../lib/intentBundle'
 
 async function testIntents<T extends Transport>(
-    adminWallet: SuaveWallet<T>
+    suaveWallet: SuaveWallet<T>
     , suaveProvider: SuaveProvider<T>
-    , userKey: Hex
+    , goerliKey: Hex
     , kettleAddress: Hex) {
-    const intentRouterAddress = await deployLimitOrderManager(adminWallet, suaveProvider)
+    const intentRouterAddress = await deployLimitOrderManager(suaveWallet, suaveProvider)
     // const intentRouterAddress = '0x8a0668a89f69fba939745eebfa7bd7fca433a0b3' as Hex
     console.log("intentRouterAddress", intentRouterAddress)
+    const goerliWallet = createWalletClient({
+      account: privateKeyToAccount(goerliKey),
+      transport: http(goerli.rpcUrls.public.http[0]),
+    })
 
-    console.log("adminWallet", adminWallet.account.address)
-    console.log("userKey", userKey)
+    console.log("suaveWallet", suaveWallet.account.address)
+    console.log("goerliWallet", goerliWallet.account.address)
 
     // automagically decode revert messages before throwing them
     // TODO: build this natively into the wallet client
-    adminWallet = adminWallet.extend((client) => ({
+    suaveWallet = suaveWallet.extend((client) => ({
       async sendTransaction(tx: TransactionRequestSuave): Promise<Hex> {
         try {
           return await client.sendTransaction(tx)
@@ -53,28 +56,22 @@ async function testIntents<T extends Transport>(
       }
     }))
 
-    const userWallet = createWalletClient({
-      account: privateKeyToAccount(userKey),
-      transport: http(goerli.rpcUrls.public.http[0]),
-    })
-
     const amountIn = parseEther('0.01')
     console.log(`buying tokens with ${formatEther(amountIn)} WETH`)
     const limitOrder = new LimitOrder({
       amountInMax: amountIn,
       amountOutMin: 13n,
       expiryTimestamp: BigInt(Math.round(new Date().getTime() / 1000) + 3600),
-      senderKey: userKey,
+      senderKey: goerliKey,
       tokenIn: '0x37e180773D995c8CEE9dB5e63DE40330Ebf3C172' as Hex, // WETH
       tokenOut: '0xCD5fF331F1a417D8dEd7CFCe447c09256D7Cd6b6' as Hex, // "DAI"
-      to: userWallet.account.address,
+      to: goerliWallet.account.address,
     }, suaveProvider, intentRouterAddress, kettleAddress)
 
     console.log("orderId", limitOrder.orderId())
 
     const tx = await limitOrder.toTransactionRequest()
-    let limitOrderTxHash: Hex = '0x'
-    limitOrderTxHash = await adminWallet.sendTransaction(tx)
+    const limitOrderTxHash: Hex = await suaveWallet.sendTransaction(tx)
     console.log("limitOrderTxHash", limitOrderTxHash)
 
     let ccrReceipt: TransactionReceiptSuave | null = null
@@ -126,7 +123,7 @@ async function testIntents<T extends Transport>(
   
     // check onchain for intent
     const intentResult = await suaveProvider.call({
-      account: adminWallet.account.address,
+      account: suaveWallet.account.address,
       to: intentRouterAddress,
       data: encodeFunctionData({
         abi: IntentsContract.abi,
@@ -162,10 +159,10 @@ async function testIntents<T extends Transport>(
       transport: http(goerli.rpcUrls.public.http[0]),
     })
     const nonce = await goerliProvider.getTransactionCount({
-      address: userWallet.account.address
+      address: goerliWallet.account.address
     })
     console.log("nonce", nonce)
-    console.log("admin", userWallet.account.address)
+    console.log("admin", goerliWallet.account.address)
     const blockNumber = await goerliProvider.getBlockNumber()
     const targetBlock = blockNumber + 1n
     console.log("targeting blockNumber", targetBlock)
@@ -188,7 +185,7 @@ async function testIntents<T extends Transport>(
     console.log("fulfillOrder txRequest", txRequest)
 
     // send the CCR
-    const fulfillIntentTxHash = await adminWallet.sendTransaction(txRequest)
+    const fulfillIntentTxHash = await suaveWallet.sendTransaction(txRequest)
     console.log("fulfillIntentTxHash", fulfillIntentTxHash)
 
     // wait for tx receipt, then log it
@@ -240,13 +237,13 @@ async function main() {
   console.log("suaveWallet", suaveWallet.account.address)
   // connect to rigil testnet
   const suaveProvider = getSuaveProvider(http(suaveRigil.rpcUrls.default.http[0]))
-  const USERKEY = (config.GOERLI_KEY || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80') as Hex
-  const userWallet = createWalletClient({
-    account: privateKeyToAccount(USERKEY),
+  const goerliKEY = (config.GOERLI_KEY || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80') as Hex
+  const goerliWallet = createWalletClient({
+    account: privateKeyToAccount(goerliKEY),
     transport: http(goerli.rpcUrls.public.http[0]),
   })
-  console.log("userWallet", userWallet.account.address)
-  await testIntents(suaveWallet, suaveProvider, USERKEY, TESTNET_KETTLE_ADDRESS)
+  console.log("goerliWallet", goerliWallet.account.address)
+  await testIntents(suaveWallet, suaveProvider, goerliKEY, TESTNET_KETTLE_ADDRESS)
 }
 
 main()

@@ -53,6 +53,11 @@ async function testIntents<T extends Transport>(
       }
     }))
 
+    const userWallet = createWalletClient({
+      account: privateKeyToAccount(userKey),
+      transport: http(goerli.rpcUrls.public.http[0]),
+    })
+
     const amountIn = parseEther('0.01')
     console.log(`buying tokens with ${formatEther(amountIn)} WETH`)
     const limitOrder = new LimitOrder({
@@ -157,8 +162,10 @@ async function testIntents<T extends Transport>(
       transport: http(goerli.rpcUrls.public.http[0]),
     })
     const nonce = await goerliProvider.getTransactionCount({
-      address: adminWallet.account.address
+      address: userWallet.account.address
     })
+    console.log("nonce", nonce)
+    console.log("admin", userWallet.account.address)
     const blockNumber = await goerliProvider.getBlockNumber()
     const targetBlock = blockNumber + 1n
     console.log("targeting blockNumber", targetBlock)
@@ -167,8 +174,8 @@ async function testIntents<T extends Transport>(
     const txMeta = new TxMeta()
       .withChainId(goerli.id)
       .withNonce(nonce)
-      .withGas(200000n)
-      .withGasPrice(20000000000n)
+      .withGas(300000n)
+      .withGasPrice(30000000000n)
     console.log("txMeta", txMeta)
     const fulfillIntent = new FulfillIntentRequest({
       orderId: limitOrder.orderId(),

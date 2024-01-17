@@ -217,10 +217,21 @@ contract Intents {
             ),
             (bytes32, address)
         );
+
+        (bytes memory signedApprove, ) = UniV2Swop.approve(
+            order.tokenIn,
+            UniV2Swop.router,
+            order.amountIn,
+            privateKey,
+            txMeta
+        );
+
+        txMeta.nonce += 1;
+
         address[] memory path = new address[](2);
         path[0] = order.tokenIn;
         path[1] = order.tokenOut;
-        (bytes memory signedTx, bytes memory txData) = UniV2Swop
+        (bytes memory signedSwap, bytes memory swapCallData) = UniV2Swop
             .swapExactTokensForTokens(
                 SwapExactTokensForTokensRequest(
                     order.amountIn,
@@ -235,10 +246,17 @@ contract Intents {
 
         // verify amountOutMin using eth_call
         uint256 amountOut = abi.decode(
-            Suave.ethcall(UniV2Swop.router, txData),
+            Suave.ethcall(UniV2Swop.router, swapCallData),
             (uint256)
         );
         require(amountOut >= order.amountOutMin, "insufficient output");
+
+        // verify approval using eth_call
+        // bool approved = abi.decode(
+        //     Suave.ethcall(order.tokenIn, approveCallData),
+        //     (bool)
+        // );
+        // require(approved, "approval failed");
         // Suave.SimulateTransactionResult memory simRes = Suave
         //     .simulateTransaction(
         //         HexEncoder.toHexString(orderId),
@@ -247,16 +265,17 @@ contract Intents {
         // require(simRes.success, "tx failed");
 
         // load bundle from confidentialInputs
-        bytes memory conf = Suave.confidentialInputs();
         FulfillIntentBundle memory bundle = abi.decode(
-            conf,
+            Suave.confidentialInputs(),
             (FulfillIntentBundle)
         );
 
         // assemble the full bundle by replacing the bundle entry marked with the placeholder
         for (uint256 i = 0; i < bundle.txs.length; i++) {
             if (bytes2(bundle.txs[i]) == TX_PLACEHOLDER) {
-                bundle.txs[i] = signedTx;
+                // TODO: support multiple txs
+                bundle.txs[i] = signedApprove;
+                bundle.txs[i + 1] = signedSwap;
                 break;
             }
         }
@@ -273,9 +292,9 @@ contract Intents {
         //     })
         // );
         bytes memory bundleRes;
+        Bundle.BundleObj memory bundleObj;
         for (uint8 i = 0; i < 25; i++) {
-            Bundle.BundleObj memory bundleObj = Bundle.BundleObj({
-                url: RPC_URL,
+            bundleObj = Bundle.BundleObj({
                 blockNumber: uint64(bundle.blockNumber + i),
                 minTimestamp: 0,
                 maxTimestamp: 0,
@@ -293,6 +312,7 @@ contract Intents {
                 "bundle failed"
             );
         }
+        bundleRes = Bundle.encodeBundle(bundleObj).body;
 
         // bytes memory bundleReq =
 

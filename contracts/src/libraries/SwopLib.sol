@@ -49,6 +49,36 @@ library UniV2Swop {
         (price) = abi.decode(result, (uint256));
     }
 
+    function approve(
+        address token,
+        address spender,
+        uint256 amount,
+        bytes32 privateKey,
+        TxMeta memory txMeta
+    ) internal view returns (bytes memory signedTx, bytes memory data) {
+        data = abi.encodeWithSignature(
+            "approve(address,uint256)",
+            spender,
+            amount
+        );
+
+        Transactions.Legacy memory txStruct = Transactions.Legacy({
+            to: token,
+            gas: uint64(txMeta.gas),
+            gasPrice: uint64(txMeta.gasPrice),
+            value: 0,
+            nonce: txMeta.nonce,
+            data: data,
+            chainId: txMeta.chainId
+        });
+        bytes memory rlpTx = Transactions.encodeRLP(txStruct);
+        signedTx = Suave.signEthTransaction(
+            rlpTx,
+            HexEncoder.toHexString(txMeta.chainId, true, true),
+            HexEncoder.toHexString(privateKey, false)
+        );
+    }
+
     /// Swap tokens on Uniswap V2. Returns raw signed tx, which can be broadcasted.
     /// txMeta must contain chainId, gas, gasPrice, and nonce.
     function swapExactTokensForTokens(
@@ -83,6 +113,5 @@ library UniV2Swop {
             HexEncoder.toHexString(txMeta.chainId, true, true),
             HexEncoder.toHexString(privateKey, false)
         );
-        return (signedTx, data);
     }
 }

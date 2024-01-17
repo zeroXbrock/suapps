@@ -80,7 +80,7 @@ export interface IFulfillIntentRequest {
 export class Bundle {
     signedTxs: Hex[]
     constructor() {
-        this.signedTxs = ['0xf00d']
+        this.signedTxs = ['0xf00d', '0xf00d']
     }
 
     frontload(txs: Hex[]): this {
@@ -131,7 +131,7 @@ export class FulfillIntentRequest<T extends Transport> implements IFulfillIntent
             confidentialInputs: this.confidentialInputsBytes(),
             kettleAddress: this.kettleAddress,
             gasPrice: feeData.baseFeePerGas[0] || 10000000000n,
-            gas: 2000111n, // weird; this fixes "out of gas" error, but this tx only used 25k gas landed
+            gas: 3000111n, // weird; this fixes "out of gas" error, but this tx only used 25k gas landed
             type: SuaveTxRequestTypes.ConfidentialRequest,
         }
     }

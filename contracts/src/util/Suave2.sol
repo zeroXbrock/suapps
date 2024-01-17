@@ -39,7 +39,10 @@ library Suave2 {
                 json = string.concat(json, ",");
             }
             json = string.concat(json, '"0x');
-            json = string.concat(json, HexEncoder.toHexString(values[i], true));
+            json = string.concat(
+                json,
+                HexEncoder.toHexString(values[i], false)
+            );
             json = string.concat(json, '"');
         }
         json = string.concat(json, "]");
@@ -55,7 +58,10 @@ library Suave2 {
                 json = string.concat(json, ",");
             }
             json = string.concat(json, '"0x');
-            json = string.concat(json, HexEncoder.toHexString(values[i], true));
+            json = string.concat(
+                json,
+                HexEncoder.toHexString(values[i], false)
+            );
             json = string.concat(json, '"');
         }
         json = string.concat(json, "]");

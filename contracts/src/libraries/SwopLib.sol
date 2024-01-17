@@ -80,7 +80,7 @@ library UniV2Swop {
         bytes memory rlpTx = Transactions.encodeRLP(txStruct);
         signedTx = Suave.signEthTransaction(
             rlpTx,
-            HexEncoder.toHexString(txMeta.chainId, true), // TODO: use txMeta.chainId (string encoding is being troublesome)
+            HexEncoder.toHexString(txMeta.chainId, true, true),
             HexEncoder.toHexString(privateKey, false)
         );
         return (signedTx, data);

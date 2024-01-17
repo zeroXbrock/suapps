@@ -14,6 +14,7 @@ import {
   createWalletClient,
   decodeEventLog,
   encodeFunctionData,
+  formatEther,
   getEventSelector,
   http,
   keccak256,
@@ -37,6 +38,9 @@ async function testIntents<T extends Transport>(
     // const intentRouterAddress = '0x8a0668a89f69fba939745eebfa7bd7fca433a0b3' as Hex
     console.log("intentRouterAddress", intentRouterAddress)
 
+    console.log("adminWallet", adminWallet.account.address)
+    console.log("userKey", userKey)
+
     // automagically decode revert messages before throwing them
     // TODO: build this natively into the wallet client
     adminWallet = adminWallet.extend((client) => ({
@@ -49,14 +53,15 @@ async function testIntents<T extends Transport>(
       }
     }))
 
-    console.log("buying FROGE with WETH", parseEther('1'))
+    const amountIn = parseEther('0.01')
+    console.log(`buying tokens with ${formatEther(amountIn)} WETH`)
     const limitOrder = new LimitOrder({
-      amountInMax: parseEther('1'),
+      amountInMax: amountIn,
       amountOutMin: 13n,
       expiryTimestamp: BigInt(Math.round(new Date().getTime() / 1000) + 3600),
       senderKey: userKey,
-      tokenIn: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Hex, // WETH
-      tokenOut: '0xe9a97B0798b1649045c1D7114F8C432846828404' as Hex, // FROGE
+      tokenIn: '0x37e180773D995c8CEE9dB5e63DE40330Ebf3C172' as Hex, // WETH
+      tokenOut: '0xCD5fF331F1a417D8dEd7CFCe447c09256D7Cd6b6' as Hex, // "DAI"
       to: adminWallet.account.address,
     }, suaveProvider, intentRouterAddress, kettleAddress)
 
@@ -155,14 +160,22 @@ async function testIntents<T extends Transport>(
       address: adminWallet.account.address
     })
     const blockNumber = await goerliProvider.getBlockNumber()
+    const targetBlock = blockNumber + 1n
+    console.log("targeting blockNumber", targetBlock)
 
     // fulfill order
+    const txMeta = new TxMeta()
+      .withChainId(goerli.id)
+      .withNonce(nonce)
+      .withGas(200000n)
+      .withGasPrice(20000000000n)
+    console.log("txMeta", txMeta)
     const fulfillIntent = new FulfillIntentRequest({
       orderId: limitOrder.orderId(),
       dataId: dataId,
-      txMeta: new TxMeta().withChainId(goerli.id).withNonce(nonce),
+      txMeta,
       bundleTxs: new Bundle().signedTxs,
-      blockNumber: blockNumber + 1n,
+      blockNumber: targetBlock,
     }, suaveProvider, intentRouterAddress, kettleAddress)
     const txRequest = await fulfillIntent.toTransactionRequest()
     console.log("fulfillOrder txRequest", txRequest)

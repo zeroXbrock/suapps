@@ -5,6 +5,7 @@ pragma solidity ^0.8.13;
 // import "suave/standard_peekers/bids.sol";
 // import "./SuaveWallet.sol";
 import {Suave} from "suavestd/suavelib/Suave.sol";
+import {Bundle} from "suavestd/protocols/Bundle.sol";
 import {Transactions} from "suavestd/Transactions.sol";
 import {UniV2Swop, SwapExactTokensForTokensRequest, TxMeta} from "./libraries/SwopLib.sol";
 import {HexEncoder} from "./util/HexEncoder.sol";
@@ -52,7 +53,7 @@ contract Intents {
         uint256 expiryTimestamp,
         uint256 random
     );
-    event IntentFulfilled(bytes32 orderId);
+    event IntentFulfilled(bytes32 orderId, uint256 amountOut, bytes bundleRes);
 
     fallback() external {
         emit Test(0x9001);
@@ -165,16 +166,25 @@ contract Intents {
 
     /// Returns ABI-encoded calldata of `onReceivedIntent(...)`.
     function encodeOnFulfilledIntent(
-        bytes32 orderId
+        bytes32 orderId,
+        uint256 amountOut,
+        bytes memory bundleRes
     ) private pure returns (bytes memory) {
         return
-            bytes.concat(this.onFulfilledIntent.selector, abi.encode(orderId));
+            bytes.concat(
+                this.onFulfilledIntent.selector,
+                abi.encode(orderId, amountOut, bundleRes)
+            );
     }
 
     /// Triggered when an intent is fulfilled via `fulfillIntent`.
-    function onFulfilledIntent(bytes32 orderId) public {
+    function onFulfilledIntent(
+        bytes32 orderId,
+        uint256 amountOut,
+        bytes memory bundleRes
+    ) public {
         delete intentsPending[orderId];
-        emit IntentFulfilled(orderId);
+        emit IntentFulfilled(orderId, amountOut, bundleRes);
     }
 
     /// Fulfill an intent.
@@ -237,8 +247,9 @@ contract Intents {
         // require(simRes.success, "tx failed");
 
         // load bundle from confidentialInputs
+        bytes memory conf = Suave.confidentialInputs();
         FulfillIntentBundle memory bundle = abi.decode(
-            Suave.confidentialInputs(),
+            conf,
             (FulfillIntentBundle)
         );
 
@@ -251,30 +262,58 @@ contract Intents {
         }
 
         // encode bundle request
-        bytes memory bundleReq = Suave2.encodeBundleRequestJson(
-            Suave2.SendBundleRequest({
-                txs: bundle.txs,
-                blockNumber: bundle.blockNumber,
+        // bytes memory bundleReq = Suave2.encodeBundleRequestJson(
+        //     Suave2.SendBundleRequest({
+        //         txs: bundle.txs,
+        //         blockNumber: bundle.blockNumber,
+        //         minTimestamp: 0,
+        //         maxTimestamp: 0,
+        //         revertingTxHashes: new bytes32[](0),
+        //         replacementUuid: ""
+        //     })
+        // );
+        bytes memory bundleRes;
+        for (uint8 i = 0; i < 25; i++) {
+            Bundle.BundleObj memory bundleObj = Bundle.BundleObj({
+                url: RPC_URL,
+                blockNumber: uint64(bundle.blockNumber + i),
                 minTimestamp: 0,
                 maxTimestamp: 0,
-                revertingTxHashes: new bytes32[](0),
-                replacementUuid: ""
-            })
-        );
+                txns: bundle.txs
+            });
+
+            bundleRes = Bundle.sendBundle(
+                "https://relay-goerli.flashbots.net",
+                bundleObj
+            );
+            require(
+                // this hex is '{"id":1,"result"'
+                // close-enough way to check for successful sendBundle call
+                bytes16(bundleRes) == 0x7b226964223a312c22726573756c7422,
+                "bundle failed"
+            );
+        }
+
+        // bytes memory bundleReq =
 
         // simulate bundle and revert if it fails
-        require(Suave.simulateBundle(bundleReq) > 0, "bundle sim failed");
+        // require(Suave.simulateBundle(bundleReq) > 0, "bundle sim failed");
 
-        // send bundle via flashbots
-        bytes memory bundleRes = Suave.submitBundleJsonRPC(
-            RPC_URL,
-            "eth_sendBundle",
-            bundleReq
-        );
+        // can't send bundle via flashbots if we use legacy txs
+        // bytes memory bundleRes = Suave.submitBundleJsonRPC(
+        //     RPC_URL,
+        //     "eth_sendBundle",
+        //     bundleReq
+        // );
+
         // TODO: not sure if this is the right way to check for success
-        require(abi.decode(bundleRes, (bool)), "bundle failed");
+        // require(abi.decode(bundleRes, (bool)), "bundle failed");
 
+        /*
         // trigger `onFulfilledIntent`
         suaveCallData = encodeOnFulfilledIntent(orderId);
+        */
+        // trigger `onFulfilledIntent`
+        suaveCallData = encodeOnFulfilledIntent(orderId, amountOut, bundleRes);
     }
 }

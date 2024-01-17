@@ -124,13 +124,14 @@ export class FulfillIntentRequest<T extends Transport> implements IFulfillIntent
 
     async toTransactionRequest(): Promise<TransactionRequestSuave> {
         const feeData = await this.client.getFeeHistory({blockCount: 1, rewardPercentiles: [51]})
+        console.log("confidentialInputsBytes", this.confidentialInputsBytes())
         return {
             to: this.contractAddress,
             data: this.calldata(),
             confidentialInputs: this.confidentialInputsBytes(),
             kettleAddress: this.kettleAddress,
             gasPrice: feeData.baseFeePerGas[0] || 10000000000n,
-            gas: 250000n,
+            gas: 2000111n, // weird; this fixes "out of gas" error, but this tx only used 25k gas landed
             type: SuaveTxRequestTypes.ConfidentialRequest,
         }
     }
@@ -143,12 +144,24 @@ export class FulfillIntentRequest<T extends Transport> implements IFulfillIntent
         }
          */
         return encodeAbiParameters([
-            {type: 'bytes[]', name: 'txs'},
-            {type: 'uint256', name: 'blockNumber'},
-        ], [
-            this.bundleTxs,
-            this.blockNumber,
-        ])
+            {
+                components: [
+                    {
+                        name: 'txs',
+                        type: 'bytes[]',
+                    },
+                    {
+                        name: 'blockNumber',
+                        type: 'uint256',
+                    }
+                ],
+                name: 'FulfillIntentBundle',
+                type: 'tuple'
+            }
+        ] as const, [{
+            txs: this.bundleTxs,
+            blockNumber: this.blockNumber,
+        }])
     }
 
     private calldata(): Hex {

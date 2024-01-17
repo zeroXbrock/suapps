@@ -44,8 +44,11 @@ contract SwopLibTest is Test, SuaveEnabled {
         console2.log("chainId: %d", txMeta.chainId);
         (bytes memory signedTx, bytes memory data) = UniV2Swop
             .swapExactTokensForTokens(request, privateKey, txMeta);
-        console2.log("rawTx: %s", HexEncoder.toHexString(signedTx, false));
-        console2.log("data: %s", HexEncoder.toHexString(data, false));
+        console2.log(
+            "signedTx: %s",
+            HexEncoder.toHexString(signedTx, false, true)
+        );
+        console2.log("data: %s", HexEncoder.toHexString(data, false, true));
         // TODO: be more assertive
     }
 }

@@ -67,7 +67,7 @@ async function testIntents<T extends Transport>(
       senderKey: userKey,
       tokenIn: '0x37e180773D995c8CEE9dB5e63DE40330Ebf3C172' as Hex, // WETH
       tokenOut: '0xCD5fF331F1a417D8dEd7CFCe447c09256D7Cd6b6' as Hex, // "DAI"
-      to: adminWallet.account.address,
+      to: userWallet.account.address,
     }, suaveProvider, intentRouterAddress, kettleAddress)
 
     console.log("orderId", limitOrder.orderId())

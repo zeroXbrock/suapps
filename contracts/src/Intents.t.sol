@@ -5,7 +5,6 @@ import "forge/StdAssertions.sol";
 import "forge/Test.sol";
 import "forge/console2.sol";
 
-import "./util/Suave2.sol";
 import "./Intents.sol";
 
 contract IntentsTest is Test {

@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-// import "suave/libraries/Suave.sol";
-// import "suave/standard_peekers/bids.sol";
-// import "./SuaveWallet.sol";
 import {Suave} from "suavestd/suavelib/Suave.sol";
 import {Bundle} from "suavestd/protocols/Bundle.sol";
 import {Transactions} from "suavestd/Transactions.sol";
 import {UniV2Swop, SwapExactTokensForTokensRequest, TxMeta} from "./libraries/SwopLib.sol";
 import {HexEncoder} from "./util/HexEncoder.sol";
-import {Suave2} from "./util/Suave2.sol";
 
 /// Limit order for a swap. Used as a simple example for intents delivery system.
 struct LimitOrder {

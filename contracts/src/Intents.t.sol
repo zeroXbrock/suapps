@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "forge/StdAssertions.sol";
+import "forge/Test.sol";
+import "forge/console2.sol";
+
+import "./util/Suave2.sol";
+import "./Intents.sol";
+
+contract IntentsTest is Test {
+    function testEncodeBundle() public pure {
+        bytes
+            memory encoded = hex"0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000009e7ad0000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002f00d000000000000000000000000000000000000000000000000000000000000";
+        FulfillIntentBundle memory decoded = abi.decode(
+            encoded,
+            (FulfillIntentBundle)
+        );
+        assert(decoded.txs.length == 1);
+        assert(decoded.blockNumber == 0x9e7ad0);
+    }
+}

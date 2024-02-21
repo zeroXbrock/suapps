@@ -1,7 +1,7 @@
-import { Hex, decodeErrorResult, getFunctionSelector } from 'viem'
-import SuaveContract from '../contracts/out/Suave.sol/Suave.json'
+import { bytesToString, hexToBytes } from 'viem'
 
-function decodeRawError<E extends Error>(error: E): {abiItem: any, args: any, name: string, details: string} {
+/** only catches and decodes revert errors, throws the rest. */
+function decodeRawError<E extends Error>(error: E): {name: string, details: string} {
     const details = error.message.match(/Details: (.*)/)?.[1]
     if (!details) {
         console.error('could not find revert details')
@@ -12,18 +12,10 @@ function decodeRawError<E extends Error>(error: E): {abiItem: any, args: any, na
         console.error('could not find revert reason')
         throw error
     }
-    // check if it's a suave error
-    const suaveErrorSelector = getFunctionSelector('PeekerReverted(address, bytes)')
-    if (!reason.startsWith(suaveErrorSelector)) {
-        console.error("unknown signature, failed to decode revert message", reason)
-        throw error
-    }
-    const decodedReason = decodeErrorResult({abi: SuaveContract.abi, data: reason as Hex})
+    const decodedReason = bytesToString(hexToBytes(`0x${reason.substring(10)}`))
     return {
-        abiItem: decodedReason.abiItem,
-        name: decodedReason.errorName,
-        args: decodedReason.args,
-        details,
+        name: 'execution reverted',
+        details: decodedReason,
     }
 }
 
@@ -31,14 +23,12 @@ function decodeRawError<E extends Error>(error: E): {abiItem: any, args: any, na
 /// think it would rely on me using the contract primitives in viem,
 /// which I can't use because of how we sign/send txs (have to use suave wallet directly)
 export class SuaveRevert<E extends Error> extends Error {
-    abiItem: any
     details: string
 
     constructor(rawError: E) {
         const decodedError = decodeRawError(rawError)
-        super(`args: [${decodedError.args}]`)
+        super(`Execution reverted. ${decodedError.details}`)
         this.name = decodedError.name
-        this.abiItem = decodedError.abiItem
         this.cause = rawError.message
         this.details = decodedError.details
     }

@@ -2,7 +2,7 @@ import { http, Address, Transport } from 'viem'
 import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
 import { SlotsClient, checkSlotPullReceipt } from '../lib/slots'
 import { ETH, roundEth } from '../lib/utils'
-import { DEFAULT_ADMIN_KEY, DEFAULT_KETTLE_ADDRESS } from '../cli/slots/commonArgs';
+import { DEFAULT_ADMIN_KEY, DEFAULT_KETTLE_ADDRESS } from '../cli/helpers';
 
 export async function testSlotMachine<T extends Transport>(params: {
     suaveProvider: SuaveProvider<T>,

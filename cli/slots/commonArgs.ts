@@ -1,7 +1,7 @@
 import { Command, Option } from 'commander'
 import { SlotsClient } from '../../lib/slots'
-import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
-import { Hex, HttpTransport, http, isHex } from 'viem'
+import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from '@flashbots/suave-viem/chains/utils'
+import { Hex, HttpTransport, http, isHex } from '@flashbots/suave-viem'
 import fs from 'fs'
 import { DEFAULT_ADMIN_KEY, DEFAULT_KETTLE_ADDRESS } from '../helpers'
 
@@ -15,7 +15,7 @@ export type CommonArgs = {
 
 /** Options to be added to a command. */
 export const commonArgs: Option[] = [
-    new Option('-p, --private-key <privateKey>', `Private key of wallet used to deploy contracts.`).default(DEFAULT_ADMIN_KEY),
+    new Option('-p, --private-key <privateKey>', 'Private key of wallet used to deploy contracts.').default(DEFAULT_ADMIN_KEY),
     new Option('-r, --rpc-url <rpcUrl>', 'URL of suave-geth RPC node. (only supports http for now)').default('http://localhost:8545'),
     new Option('-k, --kettle-address  <kettleAddress>', 'Address of SUAVE Kettle that will process your confidential requests.').default(DEFAULT_KETTLE_ADDRESS),
     new Option('-d, --deployment-file  <deploymentFile>', 'Path to file where deployment information is saved.').default('./deployments/slots.json'),
@@ -25,7 +25,8 @@ export const commonArgs: Option[] = [
  * 
  * Optionally allow excluding certain args by their long name.
 */
-export function withCommonArgs (command: Command, exclude?: string[]) {
+export function withCommonArgs (baseCommand: Command, exclude?: string[]) {
+    let command = baseCommand
     for (const option of commonArgs) {
         if (option.long && exclude && exclude.includes(option.long)) continue
         command = command.addOption(option)
@@ -34,7 +35,7 @@ export function withCommonArgs (command: Command, exclude?: string[]) {
 }
 
 /** Parses args to return a fresh SlotsClient along with the wallet and provider used to create it.  */
-export function getHookedUp(args: CommonArgs & any): {
+export function getHookedUp(args: CommonArgs & {libAddress?: string}): {
     wallet: SuaveWallet<HttpTransport>,
     provider: SuaveProvider<HttpTransport>,
     slotsClient: SlotsClient<HttpTransport>,
@@ -57,7 +58,7 @@ export function getHookedUp(args: CommonArgs & any): {
     const slotsClient = new SlotsClient({
         wallet,
         provider,
-        kettleAddress: args.kettleAddress,
+        kettleAddress: args.kettleAddress as Hex | undefined,
         slotLibAddress: args.libAddress as Hex | undefined,
         slotMachinesAddress: fileConfig?.slotMachinesAddress as Hex | undefined,
         slotIds: fileConfig?.initializedSlots as bigint[] | undefined,

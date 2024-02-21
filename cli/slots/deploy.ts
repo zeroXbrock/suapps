@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import { isHex } from 'viem'
+import { isHex } from '@flashbots/suave-viem'
 import fs from 'fs'
 import { getHookedUp, type CommonArgs, withCommonArgs } from './commonArgs'
 
@@ -7,9 +7,9 @@ async function deploy(args: CommonArgs & {
     libAddress?: string,
     force: boolean,
 }) {
-    if (!isHex(args.privateKey) || args.privateKey.length !== 66) throw new Error(`invalid private key.`)
-    if (!isHex(args.kettleAddress) || args.kettleAddress.length !== 42) throw new Error(`invalid kettle address.`)
-    if (args.libAddress && (!isHex(args.libAddress) || args.libAddress.length !== 42)) throw new Error(`invalid lib address.`)
+    if (!isHex(args.privateKey) || args.privateKey.length !== 66) throw new Error('invalid private key.')
+    if (!isHex(args.kettleAddress) || args.kettleAddress.length !== 42) throw new Error('invalid kettle address.')
+    if (args.libAddress && (!isHex(args.libAddress) || args.libAddress.length !== 42)) throw new Error('invalid lib address.')
     if (fs.existsSync(args.deploymentFile) && !args.force) {
         console.log(`save file found at '${args.deploymentFile}', use --force to overwrite`)
         console.log(JSON.parse(fs.readFileSync(args.deploymentFile, 'utf8')))

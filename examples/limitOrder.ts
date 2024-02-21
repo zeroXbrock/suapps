@@ -1,4 +1,11 @@
-import { SuaveProvider, SuaveTxTypes, SuaveWallet, TransactionReceiptSuave, TransactionRequestSuave, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
+import {
+  SuaveProvider,
+  SuaveTxTypes,
+  SuaveWallet,
+  TransactionReceiptSuave,
+  TransactionRequestSuave,
+  getSuaveProvider,
+  getSuaveWallet } from '@flashbots/suave-viem/chains/utils'
 import IntentsContract from '../contracts/out/Intents.sol/Intents.json'
 import { 
   LimitOrder, deployLimitOrderManager,
@@ -20,20 +27,20 @@ import {
   padHex,
   parseEther,
   toHex
-} from 'viem'
+} from '@flashbots/suave-viem'
 import { DEFAULT_ADMIN_KEY, TESTNET_KETTLE_ADDRESS } from '../cli/helpers'
-import { goerli, suaveRigil } from 'viem/chains'
+import { goerli, suaveRigil } from '@flashbots/suave-viem/chains'
 import config from "./env"
-import { privateKeyToAccount } from 'viem/accounts'
+import { privateKeyToAccount } from '@flashbots/suave-viem/accounts'
 import { ETH } from '../lib/utils'
 import { Bundle, FulfillIntentRequest, TxMeta } from '../lib/intentBundle'
 
 async function testIntents<T extends Transport>(
-    suaveWallet: SuaveWallet<T>
+    _suaveWallet: SuaveWallet<T>
     , suaveProvider: SuaveProvider<T>
     , goerliKey: Hex
     , kettleAddress: Hex) {
-    const intentRouterAddress = await deployLimitOrderManager(suaveWallet, suaveProvider)
+    const intentRouterAddress = await deployLimitOrderManager(_suaveWallet, suaveProvider)
     // const intentRouterAddress = '0x8a0668a89f69fba939745eebfa7bd7fca433a0b3' as Hex
     console.log("intentRouterAddress", intentRouterAddress)
     const goerliWallet = createWalletClient({
@@ -41,12 +48,12 @@ async function testIntents<T extends Transport>(
       transport: http(goerli.rpcUrls.public.http[0]),
     })
 
-    console.log("suaveWallet", suaveWallet.account.address)
+    console.log("suaveWallet", _suaveWallet.account.address)
     console.log("goerliWallet", goerliWallet.account.address)
 
     // automagically decode revert messages before throwing them
     // TODO: build this natively into the wallet client
-    suaveWallet = suaveWallet.extend((client) => ({
+    const suaveWallet = _suaveWallet.extend((client) => ({
       async sendTransaction(tx: TransactionRequestSuave): Promise<Hex> {
         try {
           return await client.sendTransaction(tx)
@@ -147,7 +154,7 @@ async function testIntents<T extends Transport>(
       ...intentReceivedLog,
     }).args
     console.log("*** decoded log", decodedLog)
-    const { dataId } = decodedLog as any
+    const { dataId } = decodedLog as { dataId: Hex }
     console.log("dataId", dataId)
     if (!dataId) {
       throw new Error('no dataId found in logs')

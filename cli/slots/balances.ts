@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import { CommonArgs, getHookedUp, withCommonArgs } from './commonArgs'
-import { Hex, formatEther } from 'viem'
+import { Hex, formatEther } from '@flashbots/suave-viem'
 
 async function getBalances(
     args: CommonArgs, account?: string,

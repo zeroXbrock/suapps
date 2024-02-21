@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import { CommonArgs, getHookedUp, withCommonArgs } from './commonArgs'
-import { parseEther } from 'viem'
+import { parseEther } from '@flashbots/suave-viem'
 import { checkSlotPullReceipt } from '../../lib/slots';
 
 async function playSlot(

@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import { CommonArgs, getHookedUp, withCommonArgs } from './commonArgs'
 import fs from 'fs'
-import { parseEther } from 'viem'
+import { parseEther } from '@flashbots/suave-viem'
 
 async function initMachine(
     startingPot: string,
@@ -32,7 +32,8 @@ async function initMachine(
         ]
     }
     fs.writeFileSync(args.deploymentFile, JSON.stringify(data, (_, v) => {
-        if (typeof v === 'bigint') {return v.toString()} else {return v}
+        if (typeof v === 'bigint') {return v.toString()}
+        return v
     }, 2))
 }
 

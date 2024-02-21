@@ -1,4 +1,4 @@
-import { formatEther, parseEther } from 'viem'
+import { formatEther, parseEther } from '@flashbots/suave-viem'
 import { CommonArgs, getHookedUp, withCommonArgs } from './commonArgs'
 import { Command } from 'commander'
 

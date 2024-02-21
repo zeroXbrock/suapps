@@ -11,8 +11,8 @@
   },
   "type": "module",
   "dependencies": {
-    "commander": "^11.1.0",
-    "viem": "link:viem"
+    "@flashbots/suave-viem": "main",
+    "commander": "^11.1.0"
   },
   "scripts": {
     "format": "echo 'this is a workaround to bypass suave-viem precommit script hooks'",

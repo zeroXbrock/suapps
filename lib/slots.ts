@@ -1,5 +1,5 @@
-import { Address, Hash, Hex, Transport, decodeEventLog, encodeFunctionData, getContract, hexToBigInt } from 'viem';
-import { SuaveProvider, SuaveWallet, TransactionReceiptSuave, TransactionRequestSuave } from 'viem/chains/utils';
+import { Address, Hash, Hex, Transport, decodeEventLog, encodeFunctionData, getContract, hexToBigInt } from '@flashbots/suave-viem';
+import { SuaveProvider, SuaveWallet, TransactionReceiptSuave, TransactionRequestSuave } from '@flashbots/suave-viem/chains/utils';
 import SlotsContract from '../contracts/out/Slots.sol/SlotMachines.json';
 import CasinoLibContract from '../contracts/out/CasinoLib.sol/CasinoLib.json';
 

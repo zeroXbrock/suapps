@@ -6,12 +6,12 @@ import {
     encodeAbiParameters,
     encodeFunctionData,
     parseAbi
-} from 'viem'
+} from '@flashbots/suave-viem'
 import {
     SuaveProvider,
     SuaveTxRequestTypes,
     TransactionRequestSuave
-} from 'viem/chains/utils'
+} from '@flashbots/suave-viem/chains/utils'
 
 export const TX_PLACEHOLDER: Hex = '0xf00d'
 

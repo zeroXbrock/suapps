@@ -6,13 +6,13 @@ import {
     encodeFunctionData,
     keccak256,
     parseAbi
-} from 'viem'
+} from '@flashbots/suave-viem'
 import {
     SuaveProvider,
     SuaveTxRequestTypes,
     SuaveWallet,
     TransactionRequestSuave
-} from 'viem/chains/utils'
+} from '@flashbots/suave-viem/chains/utils'
 import IntentsContract from '../contracts/out/Intents.sol/Intents.json'
 import UniV2SwopLibContract from '../contracts/out/SwopLib.sol/UniV2Swop.json'
 

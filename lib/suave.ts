@@ -1,4 +1,4 @@
-import { bytesToString, hexToBytes } from 'viem'
+import { bytesToString, hexToBytes } from '@flashbots/suave-viem'
 
 /** only catches and decodes revert errors, throws the rest. */
 function decodeRawError<E extends Error>(error: E): {name: string, details: string} {

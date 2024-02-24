@@ -7,7 +7,6 @@ WithOut
 Permission
 */
 
-// import {Suave} from "suave/libraries/Suave.sol";
 import {Suave} from "suavestd/suavelib/Suave.sol";
 import {Transactions} from "suavestd/Transactions.sol";
 import {HexEncoder} from "../util/HexEncoder.sol";
@@ -46,6 +45,7 @@ library UniV2Swop {
                 reserveOut
             )
         );
+        require(result.length > 0, "UniV2Swop: no result");
         (price) = abi.decode(result, (uint256));
     }
 
